@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Именинный реестр</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-start: #f2eee9;
+            --bg-gradient-end: #e8e2da;
+            --container-bg: rgba(255, 255, 245, 0.96);
+            --text-main: #1e1b18;
+            --text-soft: #7f6e5d;
+            --card-bg: white;
+            --border-light: #ece3db;
+            --input-bg: white;
+            --input-border: #e2d8cf;
+            --badge-bg: #1e1b18;
+            --badge-text: #fef7e8;
+            --accent: #b87c4f;
+            --accent-soft: #fefaf5;
+            --white-list-bg: #eef3e6;
+            --white-list-text: #2b5e2f;
+            --black-list-bg: #f3e9e2;
+            --black-list-text: #ac4e3b;
+            --toast-bg: #2c2824e6;
+            --shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            --sidebar-bg: rgba(255, 250, 240, 0.7);
+            --legal-bg: #e8e0d5;
+            --legal-border: #d6ccc0;
+            --stat-bg: #f0ebe4;
+            --whatsnew-bg: #b87c4f;
+            --whatsnew-text: white;
+        }
+
+        body.dark {
+            --bg-gradient-start: #121212;
+            --bg-gradient-end: #1e1b18;
+            --container-bg: #1e1c1ae6;
+            --text-main: #f0ede8;
+            --text-soft: #b0a088;
+            --card-bg: #2a2724;
+            --border-light: #3d3732;
+            --input-bg: #2a2724;
+            --input-border: #4a423c;
+            --badge-bg: #d9c5b0;
+            --badge-text: #1e1b18;
+            --accent: #e2a16a;
+            --accent-soft: #2c2822;
+            --white-list-bg: #2a3a2a;
+            --white-list-text: #b8e0b0;
+            --black-list-bg: #3d2a24;
+            --black-list-text: #f0a392;
+            --toast-bg: #000000cc;
+            --shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.5);
+            --sidebar-bg: #2a2724cc;
+            --legal-bg: #2a2724;
+            --legal-border: #4a423c;
+            --stat-bg: #2a2724;
+            --whatsnew-bg: #e2a16a;
+            --whatsnew-text: #1e1b18;
+        }
+
+        body {
+            background: linear-gradient(145deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Inter', sans-serif;
+            padding: 1.5rem 1rem;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        .dashboard {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1.5rem;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .main-col {
+            flex: 2;
+            min-width: 280px;
+        }
+
+        .sidebar-col {
+            flex: 1.4;
+            min-width: 300px;
+        }
+
+        .container-card {
+            background: var(--container-bg);
+            border-radius: 2rem;
+            box-shadow: var(--shadow);
+            padding: 1.6rem 1.3rem;
+            border: 1px solid rgba(255, 250, 240, 0.2);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .whatsnew-button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+        .whatsnew-btn {
+            background: var(--whatsnew-bg);
+            color: var(--whatsnew-text);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .stats-card {
+            background: var(--stat-bg);
+            border-radius: 1.2rem;
+            padding: 1rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid var(--border-light);
+        }
+        .stats-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .blacklist-stats {
+            font-size: 0.8rem;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .stat-name {
+            font-weight: 500;
+        }
+        .stat-count {
+            color: var(--black-list-text);
+            font-weight: bold;
+        }
+        .stat-note {
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        .stats-reset-btn {
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-soft);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--toast-bg);
+            backdrop-filter: blur(12px);
+            color: #fff6e8;
+            padding: 0.7rem 1.5rem;
+            border-radius: 3rem;
+            font-size: 0.85rem;
+            z-index: 1000;
+            transition: 0.2s;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+        }
+        .badge {
+            display: inline-block;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            font-size: 0.7rem;
+            padding: 0.25rem 0.9rem;
+            border-radius: 2rem;
+            margin-bottom: 0.6rem;
+        }
+        h1 {
+            font-size: 1.7rem;
+            background: linear-gradient(135deg, var(--text-main), var(--accent));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .date { color: var(--text-soft); font-size: 0.8rem; margin-top: 0.3rem; }
+        .sub { color: var(--text-soft); font-size: 0.75rem; margin-top: 0.3rem; }
+
+        .add-person-card {
+            background: var(--sidebar-bg);
+            border-radius: 1.6rem;
+            padding: 1rem;
+            border: 1px solid var(--border-light);
+            margin-bottom: 1.2rem;
+        }
+        .add-person-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .add-person-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .add-person-row input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 2rem;
+            color: var(--text-main);
+        }
+        .add-person-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 1.2rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .palette-card {
+            background: var(--sidebar-bg);
+            border-radius: 1.6rem;
+            padding: 1rem;
+            border: 1px solid var(--border-light);
+            margin-bottom: 1.2rem;
+        }
+        .palette-header {
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 3px solid var(--accent);
+            padding-left: 0.6rem;
+            font-weight: 600;
+        }
+        .people-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin: 0.5rem 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .person-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 3rem;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .person-chip.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .person-chip .remove-person-chip {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            margin-left: 0.2rem;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+        }
+
+        .selected-info-global {
+            margin: 0.8rem 0;
+            font-size: 0.8rem;
+            background: var(--card-bg);
+            border-radius: 1.2rem;
+            padding: 0.6rem;
+            text-align: center;
+            border: 1px dashed var(--input-border);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.7rem;
+            margin: 0.5rem 0;
+        }
+        .btn-sm {
+            flex: 1;
+            padding: 0.6rem;
+            font-size: 0.8rem;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-white-sm { background: var(--white-list-bg); color: var(--white-list-text); }
+        .btn-black-sm { background: var(--black-list-bg); color: var(--black-list-text); }
+
+        .birthday-section {
+            background: var(--accent-soft);
+            border-radius: 1.5rem;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+        }
+        .birthday-visibility {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .list-card {
+            background: var(--card-bg);
+            border-radius: 1.2rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+        .list-header {
+            padding: 0.7rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: bold;
+        }
+        .list-title { font-size: 1rem; display: flex; gap: 0.5rem; align-items: center; }
+        .count { background: var(--input-border); padding: 0.15rem 0.6rem; border-radius: 2rem; font-size: 0.7rem; }
+        .clear-list { background: none; border: none; color: var(--text-soft); font-size: 0.7rem; cursor: pointer; }
+        .people-list { list-style: none; max-height: 320px; overflow-y: auto; }
+        .people-list li {
+            display: flex;
+            flex-direction: column;
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .person-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .person-name { font-size: 0.9rem; font-weight: 500; }
+        .timestamp-info {
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin-top: 0.3rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .edit-time-btn {
+            background: none;
+            border: 1px solid var(--input-border);
+            border-radius: 1rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.65rem;
+            cursor: pointer;
+            color: var(--text-soft);
+        }
+        .remove-person { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 1rem; }
+        .empty-message { padding: 1rem; text-align: center; color: var(--text-soft); font-size: 0.75rem; }
+        
+        .update-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            text-align: left;
+        }
+        .update-version {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .update-date {
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin-left: 0.5rem;
+        }
+        .update-list {
+            margin-left: 1rem;
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+        }
+        .update-list li {
+            margin: 0.2rem 0;
+        }
+
+        .swipe-hint {
+            font-size: 0.65rem;
+            color: var(--text-soft);
+            text-align: center;
+            margin-top: 0.5rem;
+            padding: 0.3rem;
+            background: var(--stat-bg);
+            border-radius: 1rem;
+        }
+        
+        @media (max-width: 780px) {
+            .dashboard { flex-direction: column; }
+            .sidebar-col { order: 2; }
+            .main-col { order: 1; }
+            body { padding: 0.8rem; }
+            .container-card { padding: 1.2rem; }
+            .toast { white-space: normal; text-align: center; max-width: 90%; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="main-col">
+        <div class="container-card">
+            <div class="hero">
+                <button class="theme-toggle" id="themeToggleBtn">🌙</button>
+                <div class="badge">🎂 личный архив</div>
+                <h1>Именинный реестр</h1>
+                <div class="date" id="displayDate">— — —</div>
+                <div class="sub">Кого поздравляю, а кто в чёрном списке</div>
+            </div>
+
+            <div class="birthday-section">
+                <div style="font-size: 0.85rem;">🎂 Моя дата рождения:</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;" id="birthdayDisplayWrap">
+                    <span id="birthdayDisplay">не выбрана</span>
+                    <button class="birthday-visibility" id="toggleBirthdayVisibilityBtn">👁️</button>
+                </div>
+                <button class="edit-birthday" id="editBirthdayBtn" style="background: none; border:none; color: var(--accent); text-decoration: underline; cursor:pointer;">✎ выбрать</button>
+            </div>
+
+            <div class="whatsnew-button-container">
+                <button class="whatsnew-btn" id="whatsnewBtn">🎉 Что нового? v2.0</button>
+            </div>
+
+            <div class="stats-card">
+                <div class="stats-title">
+                    📊 Статистика перемещений в чёрный список
+                    <button class="stats-reset-btn" id="statsResetBtn">🗑️ сброс</button>
+                </div>
+                <div class="blacklist-stats" id="blacklistStats">
+                    <div class="stat-note">Нет данных</div>
+                </div>
+            </div>
+
+            <div class="list-card">
+                <div class="list-header">
+                    <div class="list-title">🤍 Белый список <span class="count" id="whiteCount">0</span></div>
+                    <button class="clear-list" id="clearWhiteBtn">очистить</button>
+                </div>
+                <ul class="people-list" id="whiteList"></ul>
+            </div>
+
+            <div class="list-card">
+                <div class="list-header">
+                    <div class="list-title">🖤 Чёрный список <span class="count" id="blackCount">0</span></div>
+                    <button class="clear-list" id="clearBlackBtn">очистить</button>
+                </div>
+                <ul class="people-list" id="blackList"></ul>
+            </div>
+            
+            <!-- ЛИЦЕНЗИЯ ПО ЗАКОНУ РФ -->
+            <div class="legal-block" style="background: var(--legal-bg); border-radius: 1.2rem; padding: 1rem 1.2rem; margin-top: 1.5rem; border: 1px solid var(--legal-border);">
+                <div class="legal-header" id="legalHeader" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; font-weight: 600; color: var(--accent);">
+                    <span class="legal-icon">⚖️</span>
+                    <span class="legal-title">Лицензионное соглашение (Российская Федерация)</span>
+                    <span id="legalToggleIcon" style="margin-left: auto;">▼</span>
+                </div>
+                <div class="legal-content" id="legalContent" style="margin-top: 0.8rem; padding-top: 0.5rem; border-top: 1px solid var(--legal-border); color: var(--text-soft); line-height: 1.45; font-size: 0.7rem;">
+                    <p><strong>1. Свободное использование (MIT License)</strong><br>
+                    Данное программное обеспечение можно свободно использовать, копировать, изменять, распространять, в том числе в коммерческих целях.</p>
+                    
+                    <p><strong>2. Обязательное условие</strong><br>
+                    При любом использовании данного кода (полностью или частично) вы ОБЯЗАНЫ сохранить уведомление об авторских правах и указать оригинального автора.</p>
+                    
+                    <p><strong>3. Отказ от ответственности (ст. 401 ГК РФ)</strong><br>
+                    Программное обеспечение предоставляется «как есть». Автор не несёт ответственности за любой ущерб, прямой или косвенный, возникший в результате использования программы.</p>
+                    
+                    <p><strong>4. Персональные данные (Федеральный закон № 152-ФЗ)</strong><br>
+                    Все данные сохраняются исключительно в локальном хранилище браузера пользователя. Автор не собирает, не обрабатывает и не передаёт персональные данные третьим лицам.</p>
+                    
+                    <p><strong>5. Интеллектуальная собственность (ст. 1259 ГК РФ)</strong><br>
+                    Программное обеспечение охраняется как объект авторского права в соответствии с Гражданским кодексом Российской Федерации.</p>
+                    
+                    <p><strong>6. Распространение</strong><br>
+                    Исходный код доступен на GitHub. Любой желающий может копировать, модифицировать и использовать код с обязательным указанием авторства.</p>
+                    
+                    <div class="legal-footer" style="margin-top: 0.5rem; font-size: 0.65rem; text-align: center; color: var(--text-soft); border-top: 1px dashed var(--legal-border); padding-top: 0.5rem;">
+                        © 2026 · Именинный реестр · Лицензия MIT · GitHub
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-col">
+        <div class="add-person-card">
+            <div class="add-person-title">➕ Добавить человека</div>
+            <div class="add-person-row">
+                <input type="text" id="newPersonName" placeholder="Имя, фамилия (только буквы)" autocomplete="off">
+                <button class="add-person-btn" id="addPersonBtn">Добавить</button>
+            </div>
+        </div>
+
+        <div class="palette-card">
+            <div class="palette-header">👥 Все люди <span>нажми → выделится</span></div>
+            <div class="people-grid" id="peopleGrid"></div>
+        </div>
+
+        <div class="selected-info-global" id="selectedInfoGlobal">✨ Никто не выбран</div>
+        <div class="action-buttons">
+            <button class="btn-sm btn-white-sm" id="moveSelectedToWhite">🤍 В белый список</button>
+            <button class="btn-sm btn-black-sm" id="moveSelectedToBlack">🖤 В чёрный список</button>
+        </div>
+        <div class="swipe-hint">👉 Свайп влево/вправо по имени = быстрое перемещение между списками</div>
+        <div style="margin-top: 0.6rem; font-size:0.7rem; text-align:center; color: var(--text-soft);">
+            💡 Клик по имени → выделить<br>
+            ✎ Время → указать дату поздравления
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛКИ -->
+<div id="dateModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">🎂</div><div class="modal-message">Выберите дату рождения</div><input type="date" id="birthdayPicker" style="padding:0.5rem;border-radius:2rem;border:1px solid var(--input-border);margin-bottom:1rem;width:100%;"><div class="modal-buttons"><button class="modal-btn" id="dateModalCancel">Отмена</button><button class="modal-btn confirm" id="dateModalSave">Сохранить</button></div></div></div>
+<div id="timeModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">⏰</div><div class="modal-message" id="timeModalMessage"></div><input type="datetime-local" id="datetimePicker" style="padding:0.5rem;border-radius:2rem;border:1px solid var(--input-border);margin-bottom:1rem;width:100%;"><div class="modal-buttons"><button class="modal-btn" id="timeModalCancel">Отмена</button><button class="modal-btn confirm" id="timeModalSave">Сохранить</button><button class="modal-btn" id="timeModalClear">Очистить</button></div></div></div>
+<div id="whatsnewModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">🎉</div><div class="modal-message"><strong>✨ История обновлений ✨</strong></div><div id="whatsnewContent" style="text-align:left; margin:1rem 0;"></div><div class="modal-buttons"><button class="modal-btn confirm" id="whatsnewClose">Отлично!</button></div></div></div>
+<div id="customModal" class="custom-modal"><div class="modal-content"><div class="modal-icon" id="modalIcon">❓</div><div class="modal-message" id="modalMessage"></div><div class="modal-buttons" id="modalButtons"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<style>
+    .custom-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        visibility: hidden;
+        opacity: 0;
+        transition: 0.2s;
+    }
+    .custom-modal.active {
+        visibility: visible;
+        opacity: 1;
+    }
+    .modal-content {
+        background: var(--card-bg);
+        max-width: 400px;
+        width: 90%;
+        border-radius: 2rem;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 25px 40px -12px black;
+        border: 1px solid var(--border-light);
+        color: var(--text-main);
+    }
+    .modal-icon { font-size: 2.8rem; margin-bottom: 0.5rem; }
+    .modal-message { font-size: 1rem; margin: 0.5rem 0 1rem; line-height: 1.4; }
+    .modal-buttons { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+    .modal-btn {
+        border: none;
+        background: var(--input-border);
+        padding: 0.5rem 1.4rem;
+        border-radius: 2rem;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: inherit;
+        color: var(--text-main);
+    }
+    .modal-btn.confirm { background: var(--accent); color: white; }
+</style>
+
+<script>
+(function() {
+    // ТЕМА
+    const themeToggle = document.getElementById('themeToggleBtn');
+    function setTheme(theme) {
+        if (theme === 'dark') document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
+        localStorage.setItem('birthday_theme', theme);
+        if (themeToggle) themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    const savedTheme = localStorage.getItem('birthday_theme');
+    setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+    if (themeToggle) themeToggle.onclick = () => setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+
+    // СВЁРТЫВАНИЕ ЛИЦЕНЗИИ
+    let legalCollapsed = false;
+    const legalHeader = document.getElementById('legalHeader');
+    const legalContentDiv = document.getElementById('legalContent');
+    const legalToggleIcon = document.getElementById('legalToggleIcon');
+    if (legalHeader) {
+        legalHeader.onclick = () => {
+            legalCollapsed = !legalCollapsed;
+            if (legalContentDiv) legalContentDiv.style.display = legalCollapsed ? 'none' : 'block';
+            if (legalToggleIcon) legalToggleIcon.textContent = legalCollapsed ? '▶' : '▼';
+        };
+    }
+
+    // ЧТО НОВОГО
+    const updates = [
+        { version: "v2.0", date: "03.06.2026", changes: ["🎉 Полное обновление интерфейса", "📊 Статистика чёрного списка", "👆 Swipe-жесты для быстрого перемещения", "📴 Офлайн-режим", "⚖️ Лицензия MIT в соответствии с законодательством РФ"] },
+        { version: "v1.0", date: "01.05.2026", changes: ["🚀 Первый релиз", "🤍🖤 Белый и чёрный списки"] }
+    ];
+    function showWhatsNew() {
+        const container = document.getElementById('whatsnewContent');
+        if (!container) return;
+        container.innerHTML = updates.map(update => `
+            <div class="update-item">
+                <div><span class="update-version">${escapeHtml(update.version)}</span><span class="update-date">${escapeHtml(update.date)}</span></div>
+                <ul class="update-list">${update.changes.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
+            </div>
+        `).join('');
+        document.getElementById('whatsnewModal').classList.add('active');
+    }
+    document.getElementById('whatsnewBtn').onclick = showWhatsNew;
+    document.getElementById('whatsnewClose').onclick = () => document.getElementById('whatsnewModal').classList.remove('active');
+    if (!localStorage.getItem('whatsnew_shown_v2')) { setTimeout(showWhatsNew, 800); localStorage.setItem('whatsnew_shown_v2', 'true'); }
+
+    // ВСПОМОГАТЕЛЬНЫЕ
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    function showToast(msg, dur=2500) { const t = document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),dur); } }
+    function showWarning(msg) { return new Promise(resolve => { const modal = document.getElementById('customModal'); if(!modal){ resolve(); return; } document.getElementById('modalMessage').textContent=msg; document.getElementById('modalButtons').innerHTML='<button class="modal-btn confirm">OK</button>'; modal.classList.add('active'); document.querySelector('#customModal .confirm').onclick = () => { modal.classList.remove('active'); resolve(); }; }); }
+    async function askYesNo(msg) { return new Promise(resolve => { const modal = document.getElementById('customModal'); if(!modal){ resolve(false); return; } document.getElementById('modalMessage').textContent=msg; document.getElementById('modalButtons').innerHTML='<button class="modal-btn cancel">Нет</button><button class="modal-btn confirm">Да</button>'; modal.classList.add('active'); const btns = document.querySelectorAll('#customModal .modal-btn'); btns[0].onclick = () => { modal.classList.remove('active'); resolve(false); }; btns[1].onclick = () => { modal.classList.remove('active'); resolve(true); }; }); }
+    
+    function validateName(rawName) {
+        let cleaned = rawName.trim().replace(/\s+/g, ' ');
+        if (cleaned === '') { showWarning('Введите имя'); return null; }
+        if (cleaned.length > 60) { showWarning('Слишком длинное имя'); return null; }
+        if (!/^[a-zA-Zа-яА-ЯёЁ\s\-]+$/.test(cleaned)) { showWarning('Только буквы, пробелы и дефис'); return null; }
+        return cleaned;
+    }
+
+    // СТАТИСТИКА
+    let blacklistStats = {};
+    function loadStats() { const s = localStorage.getItem('blacklist_stats'); blacklistStats = s ? JSON.parse(s) : {}; renderStats(); }
+    function saveStats() { localStorage.setItem('blacklist_stats', JSON.stringify(blacklistStats)); }
+    function incrementBlacklistStat(name) { blacklistStats[name] = (blacklistStats[name] || 0) + 1; saveStats(); renderStats(); }
+    function renderStats() {
+        const container = document.getElementById('blacklistStats');
+        if (!container) return;
+        const entries = Object.entries(blacklistStats).sort((a,b) => b[1] - a[1]);
+        if (entries.length === 0) { container.innerHTML = '<div class="stat-note">📊 Пока никто не попадал в чёрный список</div>'; return; }
+        container.innerHTML = entries.map(([name, count]) => `<div class="stat-item"><span class="stat-name">${escapeHtml(name)}</span><span class="stat-count">${count} ${getDeclension(count)}</span></div>`).join('');
+    }
+    function getDeclension(n) { n = Math.abs(n) % 100; if (n >= 5 && n <= 20) return 'раз'; n %= 10; if (n === 1) return 'раз'; if (n >= 2 && n <= 4) return 'раза'; return 'раз'; }
+    document.getElementById('statsResetBtn').onclick = async () => { if (await askYesNo('Сбросить статистику?')) { blacklistStats = {}; saveStats(); renderStats(); showToast('Статистика сброшена'); } };
+
+    // ОСНОВНЫЕ ДАННЫЕ
+    let birthdayDate = null, birthdayHidden = localStorage.getItem('birthday_hidden') === 'true';
+    let whiteList = [], blackList = [], peopleArray = [];
+    let selectedPerson = null;
+    
+    function saveAll() {
+        localStorage.setItem('birthday_white', JSON.stringify(whiteList));
+        localStorage.setItem('birthday_black', JSON.stringify(blackList));
+        localStorage.setItem('birthday_people', JSON.stringify(peopleArray));
+    }
+    function loadAll() {
+        whiteList = JSON.parse(localStorage.getItem('birthday_white') || '[]').map(i => typeof i === 'string' ? {name:i, timestamp:null} : i);
+        blackList = JSON.parse(localStorage.getItem('birthday_black') || '[]').map(i => typeof i === 'string' ? {name:i, timestamp:null} : i);
+        peopleArray = JSON.parse(localStorage.getItem('birthday_people') || '[]');
+        peopleArray = [...new Map(peopleArray.map(n => [n.toLowerCase(), n])).values()];
+    }
+    
+    function addPerson(name) {
+        if (peopleArray.includes(name)) { showWarning(`"${name}" уже есть`); return false; }
+        peopleArray.push(name);
+        saveAll();
+        renderGroups();
+        renderWhiteBlack();
+        showToast(`➕ ${name} добавлен`);
+        return true;
+    }
+    
+    function removePersonFromAll(name) {
+        peopleArray = peopleArray.filter(n => n !== name);
+        if (selectedPerson && selectedPerson.name === name) selectedPerson = null;
+        whiteList = whiteList.filter(p => p.name !== name);
+        blackList = blackList.filter(p => p.name !== name);
+        saveAll();
+        renderGroups();
+        renderWhiteBlack();
+        showToast(`🗑 ${name} удалён`);
+    }
+    
+    function createChip(name) {
+        const chip = document.createElement('div');
+        chip.className = 'person-chip';
+        if (selectedPerson && selectedPerson.name === name) chip.classList.add('selected');
+        chip.innerHTML = `${escapeHtml(name)}<button class="remove-person-chip">✕</button>`;
+        chip.onclick = (e) => { if (!e.target.classList.contains('remove-person-chip')) { selectedPerson = { name }; renderGroups(); showToast(`✅ Выбран: ${name}`); } };
+        chip.querySelector('.remove-person-chip').onclick = (e) => { e.stopPropagation(); removePersonFromAll(name); };
+        return chip;
+    }
+    
+    function renderGroups() {
+        const peopleGrid = document.getElementById('peopleGrid');
+        if (peopleGrid) {
+            peopleGrid.innerHTML = '';
+            if (peopleArray.length === 0) peopleGrid.innerHTML = '<div style="padding:0.4rem;font-size:0.7rem;color:var(--text-soft);text-align:center;">👥 Нет людей. Добавьте!</div>';
+            else peopleArray.forEach(p => peopleGrid.appendChild(createChip(p)));
+        }
+        const infoDiv = document.getElementById('selectedInfoGlobal');
+        if (infoDiv) {
+            if (selectedPerson) infoDiv.innerHTML = `✅ Выбран: <strong>${escapeHtml(selectedPerson.name)}</strong>`;
+            else infoDiv.innerHTML = '✨ Никто не выбран (нажмите на имя)';
+        }
+    }
+    
+    function formatTimestamp(ts) { return ts ? new Date(ts).toLocaleString('ru-RU') : '⏱️ время не указано'; }
+    
+    function renderWhiteBlack() {
+        const whiteContainer = document.getElementById('whiteList');
+        if (whiteContainer) {
+            whiteContainer.innerHTML = '';
+            if (whiteList.length === 0) whiteContainer.innerHTML = '<li class="empty-message">✨ Белый список пуст</li>';
+            else whiteList.forEach((item, idx) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person">✕</button></div>
+                    <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span>
+                    <button class="edit-time-btn">✎ Время</button></div>`;
+                li.querySelector('.remove-person').onclick = () => { whiteList.splice(idx,1); saveAll(); renderWhiteBlack(); renderGroups(); showToast(`${item.name} удалён`); };
+                li.querySelector('.edit-time-btn').onclick = () => openTimeEditor('white', idx, item.name);
+                whiteContainer.appendChild(li);
+            });
+        }
+        document.getElementById('whiteCount').innerText = whiteList.length;
+        
+        const blackContainer = document.getElementById('blackList');
+        if (blackContainer) {
+            blackContainer.innerHTML = '';
+            if (blackList.length === 0) blackContainer.innerHTML = '<li class="empty-message">🚫 Чёрный список пуст</li>';
+            else blackList.forEach((item, idx) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person">✕</button></div>
+                    <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span>
+                    <button class="edit-time-btn">✎ Время</button></div>`;
+                li.querySelector('.remove-person').onclick = () => { blackList.splice(idx,1); saveAll(); renderWhiteBlack(); renderGroups(); showToast(`${item.name} удалён`); };
+                li.querySelector('.edit-time-btn').onclick = () => openTimeEditor('black', idx, item.name);
+                blackContainer.appendChild(li);
+            });
+        }
+        document.getElementById('blackCount').innerText = blackList.length;
+    }
+    
+    function openTimeEditor(listType, idx, name) {
+        const modal = document.getElementById('timeModal');
+        const picker = document.getElementById('datetimePicker');
+        if (!modal || !picker) return;
+        const current = (listType === 'white' ? whiteList[idx] : blackList[idx]).timestamp;
+        picker.value = current || '';
+        document.getElementById('timeModalMessage').textContent = `Укажите дату/время для "${name}"`;
+        const save = () => { if(listType === 'white') whiteList[idx].timestamp = picker.value || null; else blackList[idx].timestamp = picker.value || null; saveAll(); renderWhiteBlack(); modal.classList.remove('active'); showToast(`Время сохранено`); };
+        const clear = () => { if(listType === 'white') whiteList[idx].timestamp = null; else blackList[idx].timestamp = null; saveAll(); renderWhiteBlack(); modal.classList.remove('active'); showToast(`Время очищено`); };
+        document.getElementById('timeModalSave').onclick = save;
+        document.getElementById('timeModalClear').onclick = clear;
+        document.getElementById('timeModalCancel').onclick = () => modal.classList.remove('active');
+        modal.classList.add('active');
+    }
+    
+    async function moveToWhite() {
+        if (!selectedPerson) { showWarning('Выберите человека'); return; }
+        const name = selectedPerson.name;
+        if (whiteList.some(p => p.name === name)) { showWarning(`${name} уже в белом списке`); return; }
+        const blackIdx = blackList.findIndex(p => p.name === name);
+        if (blackIdx !== -1 && await askYesNo(`${name} в чёрном. Переместить в белый?`)) {
+            const item = blackList[blackIdx];
+            blackList.splice(blackIdx,1);
+            whiteList.push(item);
+            saveAll();
+            renderWhiteBlack();
+            showToast(`✨ ${name} в белом списке`);
+        } else if (blackIdx === -1) {
+            whiteList.push({ name, timestamp: null });
+            saveAll();
+            renderWhiteBlack();
+            showToast(`🤍 ${name} добавлен в белый список`);
+        }
+    }
+    
+    async function moveToBlack() {
+        if (!selectedPerson) { showWarning('Выберите человека'); return; }
+        const name = selectedPerson.name;
+        if (blackList.some(p => p.name === name)) { showWarning(`${name} уже в чёрном списке`); return; }
+        const whiteIdx = whiteList.findIndex(p => p.name === name);
+        if (whiteIdx !== -1 && await askYesNo(`${name} в белом. Переместить в чёрный?`)) {
+            const item = whiteList[whiteIdx];
+            whiteList.splice(whiteIdx,1);
+            blackList.push(item);
+            incrementBlacklistStat(name);
+            saveAll();
+            renderWhiteBlack();
+            showToast(`🖤 ${name} в чёрном списке`);
+        } else if (whiteIdx === -1) {
+            blackList.push({ name, timestamp: null });
+            incrementBlacklistStat(name);
+            saveAll();
+            renderWhiteBlack();
+            showToast(`🚫 ${name} добавлен в чёрный список`);
+        }
+    }
+
+    // ДАТА РОЖДЕНИЯ
+    function updateBirthdayDisplay() {
+        const disp = document.getElementById('birthdayDisplay');
+        const header = document.getElementById('displayDate');
+        if (birthdayDate && !birthdayHidden) {
+            const [y,m,d] = birthdayDate.split('-');
+            if (disp) disp.textContent = `${d}.${m}.${y}`;
+            if (header) header.innerHTML = `${d}.${m}.${y} — моя дата`;
+        } else if (birthdayDate && birthdayHidden) {
+            if (disp) disp.textContent = '🎂 ●●●';
+            if (header) header.innerHTML = '🎂 ●●● (скрыто)';
+        } else {
+            if (disp) disp.textContent = 'не выбрана';
+            if (header) header.innerHTML = '— — —';
+        }
+    }
+    document.getElementById('toggleBirthdayVisibilityBtn').onclick = () => { birthdayHidden = !birthdayHidden; localStorage.setItem('birthday_hidden', birthdayHidden); updateBirthdayDisplay(); showToast(birthdayHidden ? 'Дата скрыта' : 'Дата видна'); };
+    document.getElementById('editBirthdayBtn').onclick = () => { document.getElementById('birthdayPicker').value = birthdayDate || ''; document.getElementById('dateModal').classList.add('active'); };
+    document.getElementById('dateModalCancel').onclick = () => document.getElementById('dateModal').classList.remove('active');
+    document.getElementById('dateModalSave').onclick = () => { birthdayDate = document.getElementById('birthdayPicker').value || null; if(birthdayDate) localStorage.setItem('birthday_date', birthdayDate); else localStorage.removeItem('birthday_date'); updateBirthdayDisplay(); document.getElementById('dateModal').classList.remove('active'); };
+
+    // SWIPE
+    function initSwipe() {
+        const whiteContainer = document.getElementById('whiteList');
+        const blackContainer = document.getElementById('blackList');
+        function addSwipe(container, sourceList, targetList, isWhiteToBlack) {
+            if (!container) return;
+            let startX = 0, startY = 0, item = null;
+            container.addEventListener('touchstart', (e) => { const li = e.target.closest('li'); if (li) { item = li; startX = e.touches[0].clientX; startY = e.touches[0].clientY; } });
+            container.addEventListener('touchend', async (e) => {
+                if (!item) return;
+                const deltaX = e.changedTouches[0].clientX - startX;
+                const deltaY = Math.abs(e.changedTouches[0].clientY - startY);
+                if (Math.abs(deltaX) > 50 && deltaY < 50) {
+                    const nameSpan = item.querySelector('.person-name');
+                    if (!nameSpan) { item = null; return; }
+                    const name = nameSpan.textContent;
+                    const idx = sourceList.findIndex(p => p.name === name);
+                    if (idx !== -1 && await askYesNo(`Переместить "${name}" в ${isWhiteToBlack ? 'чёрный' : 'белый'} список?`)) {
+                        const removed = sourceList.splice(idx, 1)[0];
+                        targetList.push(removed);
+                        if (!isWhiteToBlack) incrementBlacklistStat(name);
+                        saveAll();
+                        renderWhiteBlack();
+                        showToast(`${name} → ${isWhiteToBlack ? 'чёрный' : 'белый'}`);
+                    }
+                }
+                item = null;
+            });
+        }
+        addSwipe(whiteContainer, whiteList, blackList, true);
+        addSwipe(blackContainer, blackList, whiteList, false);
+    }
+
+    // ОФЛАЙН
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW error:', e));
+    window.addEventListener('online', () => showToast('🟢 Онлайн', 2000));
+    window.addEventListener('offline', () => showToast('📴 Офлайн-режим', 2000));
+
+    // ЗАПУСК
+    const savedBirthday = localStorage.getItem('birthday_date');
+    if (savedBirthday) birthdayDate = savedBirthday;
+    loadAll();
+    loadStats();
+    renderGroups();
+    renderWhiteBlack();
+    updateBirthdayDisplay();
+    initSwipe();
+    
+    document.getElementById('addPersonBtn').onclick = () => {
+        const input = document.getElementById('newPersonName');
+        const name = validateName(input.value);
+        if (name) { addPerson(name); input.value = ''; }
+    };
+    document.getElementById('moveSelectedToWhite').onclick = moveToWhite;
+    document.getElementById('moveSelectedToBlack').onclick = moveToBlack;
+    document.getElementById('clearWhiteBtn').onclick = async () => { if (whiteList.length && await askYesNo('Очистить белый список?')) { whiteList = []; saveAll(); renderWhiteBlack(); showToast('Белый список очищен'); } };
+    document.getElementById('clearBlackBtn').onclick = async () => { if (blackList.length && await askYesNo('Очистить чёрный список?')) { blackList = []; saveAll(); renderWhiteBlack(); showToast('Чёрный список очищен'); } };
+    document.getElementById('newPersonName').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('addPersonBtn').click(); });
+})();
+</script>
+</body>
+</html>
