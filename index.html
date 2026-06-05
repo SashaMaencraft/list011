@@ -484,7 +484,7 @@
             border-bottom: 1px solid var(--border-light);
         }
         
-        /* Панель фраз — появляется только при выборе человека из белого/чёрного списка */
+        /* Панель фраз */
         .phrases-panel {
             background: var(--phrase-bg);
             border-radius: 1.5rem;
@@ -526,10 +526,21 @@
             color: white;
             border-color: var(--accent);
         }
+        .other-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
         .custom-phrase-row {
             display: flex;
             gap: 0.5rem;
-            margin-top: 0.3rem;
+            margin-top: 0.6rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--border-light);
         }
         .custom-phrase-row input {
             flex: 1;
@@ -580,13 +591,14 @@
                 <button class="edit-birthday" id="editBirthdayBtn" style="background: none; border:none; color: var(--accent); text-decoration: underline; cursor:pointer;">✎ выбрать</button>
             </div>
 
-            <!-- Панель фраз — появляется ТОЛЬКО когда выбран человек из белого или чёрного списка -->
+            <!-- Панель фраз -->
             <div class="phrases-panel" id="phrasesPanel">
                 <div class="phrases-title" id="phrasesPanelTitle">🎁 Фразы для поздравления</div>
                 <div class="phrases-grid" id="phrasesGrid"></div>
-                <div class="custom-phrase-row">
-                    <input type="text" id="customPhraseInput" placeholder="Своя фраза для выбранного человека..." autocomplete="off">
-                    <button class="small-icon-btn" id="applyCustomPhraseBtn">✨ Применить</button>
+                <button class="other-btn" id="otherPhraseBtn">📝 Другое</button>
+                <div class="custom-phrase-row" id="customPhraseRow" style="display: none;">
+                    <input type="text" id="customPhraseInput" placeholder="Введите свою фразу..." autocomplete="off">
+                    <button class="small-icon-btn" id="applyCustomPhraseBtn" style="background: var(--accent); color: white; border: none; border-radius: 2rem; padding: 0 0.8rem;">✔</button>
                 </div>
                 <div class="selected-person-phrase" id="selectedPersonPhraseDisplay">💬 Выберите человека из списка</div>
             </div>
@@ -666,7 +678,7 @@
     </div>
 </div>
 
-<!-- Модалка для ввода даты рождения -->
+<!-- Модалки -->
 <div id="dateModal" class="custom-modal">
     <div class="modal-content">
         <div class="modal-icon">🎂</div>
@@ -684,7 +696,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ ВОССТАНОВЛЕН ==========
+    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ ==========
     // --- ТЕМА ---
     const themeToggle = document.getElementById('themeToggleBtn');
     function setTheme(theme) {
@@ -693,15 +705,11 @@
         localStorage.setItem('birthday_theme', theme);
         themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
-    const savedTheme = localStorage.getItem('birthday_theme');
-    if (savedTheme === 'dark') setTheme('dark');
+    if (localStorage.getItem('birthday_theme') === 'dark') setTheme('dark');
     else setTheme('light');
-    themeToggle.onclick = () => {
-        const isDark = document.body.classList.contains('dark');
-        setTheme(isDark ? 'light' : 'dark');
-    };
+    themeToggle.onclick = () => setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
     
-    // --- СВЕРТЫВАНИЕ ЮРИДИЧЕСКОГО БЛОКА ---
+    // --- ЮРИДИЧЕСКИЙ БЛОК ---
     const legalContent = document.getElementById('legalContent');
     const legalToggleIcon = document.getElementById('legalToggleIcon');
     let legalCollapsed = false;
@@ -711,122 +719,50 @@
         legalToggleIcon.textContent = legalCollapsed ? '▶' : '▼';
     };
 
-    // --- ВАЛИДАЦИЯ ИМЕНИ ---
-    function validateNameOnlyLetters(input) {
-        const regex = /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/;
-        return regex.test(input);
-    }
-    
+    // --- ВАЛИДАЦИЯ ---
+    function validateNameOnlyLetters(input) { return /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/.test(input); }
     function normalizeAndValidateName(rawName) {
         let cleaned = rawName.trim().replace(/\s+/g, ' ');
-        if (cleaned === '') {
-            showWarning('❌ Введите имя');
-            return null;
-        }
-        if (cleaned.length > 60) {
-            showWarning('❌ Слишком длинное имя');
-            return null;
-        }
-        if (!validateNameOnlyLetters(cleaned)) {
-            showWarning('❌ Только буквы, пробелы и дефис');
-            return null;
-        }
-        if (cleaned.startsWith('-') || cleaned.endsWith('-')) {
-            showWarning('❌ Дефис не в начале/конце');
-            return null;
-        }
+        if (cleaned === '') { showWarning('❌ Введите имя'); return null; }
+        if (cleaned.length > 60) { showWarning('❌ Слишком длинное имя'); return null; }
+        if (!validateNameOnlyLetters(cleaned)) { showWarning('❌ Только буквы, пробелы и дефис'); return null; }
+        if (cleaned.startsWith('-') || cleaned.endsWith('-')) { showWarning('❌ Дефис не в начале/конце'); return null; }
         return cleaned;
     }
 
-    // --- ДАТА РОЖДЕНИЯ (ТЕКСТОВЫЙ ВВОД) ---
-    let birthdayDate = null;
-    let birthdayHidden = localStorage.getItem('birthday_hidden') === 'true';
-    
+    // --- ДАТА РОЖДЕНИЯ ---
+    let birthdayDate = null, birthdayHidden = localStorage.getItem('birthday_hidden') === 'true';
     function parseRussianDate(dateStr) {
         const parts = dateStr.split('.');
         if (parts.length !== 3) return null;
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
+        const day = parseInt(parts[0], 10), month = parseInt(parts[1], 10), year = parseInt(parts[2], 10);
         if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-        if (day < 1 || day > 31) return null;
-        if (month < 1 || month > 12) return null;
-        if (year < 1900 || year > new Date().getFullYear()) return null;
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > new Date().getFullYear()) return null;
         const testDate = new Date(year, month - 1, day);
         if (testDate.getFullYear() !== year || testDate.getMonth() !== month - 1 || testDate.getDate() !== day) return null;
         return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
-    
-    function formatDisplayDate(isoDate) {
-        if (!isoDate) return 'не выбрана';
-        const [y, m, d] = isoDate.split('-');
-        return `${d}.${m}.${y}`;
-    }
-    
-    function loadBirthday() { 
-        const s = localStorage.getItem('birthday_date'); 
-        if(s) birthdayDate = s; 
-        updateBirthdayDisplay(); 
-    }
-    function saveBirthday(date) { 
-        birthdayDate = date; 
-        date ? localStorage.setItem('birthday_date', date) : localStorage.removeItem('birthday_date'); 
-        updateBirthdayDisplay(); 
-    }
-    function toggleBirthdayVisibility() {
-        birthdayHidden = !birthdayHidden;
-        localStorage.setItem('birthday_hidden', birthdayHidden);
-        updateBirthdayDisplay();
-        showToast(birthdayHidden ? 'Дата скрыта' : 'Дата видна');
-    }
+    function formatDisplayDate(isoDate) { if (!isoDate) return 'не выбрана'; const [y, m, d] = isoDate.split('-'); return `${d}.${m}.${y}`; }
+    function loadBirthday() { const s = localStorage.getItem('birthday_date'); if(s) birthdayDate = s; updateBirthdayDisplay(); }
+    function saveBirthday(date) { birthdayDate = date; date ? localStorage.setItem('birthday_date', date) : localStorage.removeItem('birthday_date'); updateBirthdayDisplay(); }
     function updateBirthdayDisplay() {
-        const disp = document.getElementById('birthdayDisplay');
-        const header = document.getElementById('displayDate');
-        const toggleBtn = document.getElementById('toggleBirthdayVisibilityBtn');
+        const disp = document.getElementById('birthdayDisplay'), header = document.getElementById('displayDate'), toggleBtn = document.getElementById('toggleBirthdayVisibilityBtn');
         toggleBtn.textContent = birthdayHidden ? '🙈' : '👁️';
-        
-        if(birthdayDate && !birthdayHidden){
-            const displayDate = formatDisplayDate(birthdayDate);
-            disp.textContent = displayDate;
-            header.innerHTML = `${displayDate} — моя дата ✨`;
-        } else if(birthdayDate && birthdayHidden) {
-            disp.textContent = '🎂 ●●●';
-            header.innerHTML = '🎂 ●●● (скрыто)';
-        } else { 
-            disp.textContent='не выбрана'; 
-            header.innerHTML='— — —'; 
-        }
+        if(birthdayDate && !birthdayHidden){ disp.textContent = formatDisplayDate(birthdayDate); header.innerHTML = `${formatDisplayDate(birthdayDate)} — моя дата ✨`; }
+        else if(birthdayDate && birthdayHidden){ disp.textContent = '🎂 ●●●'; header.innerHTML = '🎂 ●●● (скрыто)'; }
+        else { disp.textContent='не выбрана'; header.innerHTML='— — —'; }
     }
-    document.getElementById('toggleBirthdayVisibilityBtn').onclick = toggleBirthdayVisibility;
-    
-    const dateModal = document.getElementById('dateModal');
-    const birthdayTextInput = document.getElementById('birthdayTextInput');
-    
-    document.getElementById('editBirthdayBtn').onclick = () => {
-        if (birthdayDate) birthdayTextInput.value = formatDisplayDate(birthdayDate);
-        else birthdayTextInput.value = '';
-        dateModal.classList.add('active');
-    };
-    
+    document.getElementById('toggleBirthdayVisibilityBtn').onclick = () => { birthdayHidden = !birthdayHidden; localStorage.setItem('birthday_hidden', birthdayHidden); updateBirthdayDisplay(); showToast(birthdayHidden ? 'Дата скрыта' : 'Дата видна'); };
+    const dateModal = document.getElementById('dateModal'), birthdayTextInput = document.getElementById('birthdayTextInput');
+    document.getElementById('editBirthdayBtn').onclick = () => { if (birthdayDate) birthdayTextInput.value = formatDisplayDate(birthdayDate); else birthdayTextInput.value = ''; dateModal.classList.add('active'); };
     document.getElementById('dateModalCancel').onclick = () => dateModal.classList.remove('active');
     document.getElementById('dateModalSave').onclick = () => {
         const rawDate = birthdayTextInput.value.trim();
-        if (!rawDate) {
-            saveBirthday(null);
-            showToast('Дата сброшена');
-            dateModal.classList.remove('active');
-            return;
-        }
+        if (!rawDate) { saveBirthday(null); showToast('Дата сброшена'); dateModal.classList.remove('active'); return; }
         const parsed = parseRussianDate(rawDate);
-        if (!parsed) {
-            showWarning('❌ Формат: ДД.ММ.ГГГГ (пример: 13.05.1995)');
-            return;
-        }
-        saveBirthday(parsed);
-        showToast(`Дата ${formatDisplayDate(parsed)} сохранена`);
-        dateModal.classList.remove('active');
+        if (!parsed) { showWarning('❌ Формат: ДД.ММ.ГГГГ'); return; }
+        saveBirthday(parsed); showToast(`Дата ${formatDisplayDate(parsed)} сохранена`); dateModal.classList.remove('active');
     };
-    
     birthdayTextInput.addEventListener('input', function(e) {
         let val = this.value.replace(/[^\d]/g, '');
         if (val.length > 8) val = val.slice(0, 8);
@@ -837,39 +773,25 @@
         this.value = formatted;
     });
 
-    // --- ОСНОВНЫЕ СПИСКИ И СТАТИСТИКА ---
-    let whiteList = [], blackList = [];
-    let friendsArray = [], relativesArray = [];
-    let selectedPerson = null; // { name, listType: 'white'|'black' }
+    // --- ОСНОВНЫЕ ДАННЫЕ ---
+    let whiteList = [], blackList = [], friendsArray = [], relativesArray = [];
+    let selectedPerson = null;
     let blackMoveStats = {};
-    let customPhrases = {}; // ключ: имя -> { phrase, listType }
+    let customPhrases = {};
     
     const defaultWhitePhrases = ["С днём рождения! 🎉", "Будь счастлив(а) и здоров(а)! 🌟", "Пусть сбываются мечты ✨", "Обнимаю и поздравляю ❤️", "Ты лучший(ая), помни это! 🥳"];
     const defaultBlackPhrases = ["Никаких поздравлений.", "Пропускаем.", "Тишина в этот день.", "Игнорируем.", "👻 Призрачный пропуск."];
     
-    function formatTimestamp(isoString) {
-        if(!isoString) return '⏱️ не указано';
-        const date = new Date(isoString);
-        return date.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    }
+    function formatTimestamp(isoString) { if(!isoString) return '⏱️ не указано'; const date = new Date(isoString); return date.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
     
     function updateStats() {
         const statsContainer = document.getElementById('statsList');
         const entries = Object.entries(blackMoveStats).sort((a,b) => b[1] - a[1]);
-        if (entries.length === 0) {
-            statsContainer.innerHTML = '<div class="stats-item">Нет данных</div>';
-            return;
-        }
-        statsContainer.innerHTML = entries.map(([name, count]) => 
-            `<div class="stats-item"><span>${escapeHtml(name)}</span><span>🚫 ${count} раз</span></div>`
-        ).join('');
+        if (entries.length === 0) { statsContainer.innerHTML = '<div class="stats-item">Нет данных</div>'; return; }
+        statsContainer.innerHTML = entries.map(([name, count]) => `<div class="stats-item"><span>${escapeHtml(name)}</span><span>🚫 ${count} раз</span></div>`).join('');
     }
     
-    function incrementBlackStat(name) {
-        blackMoveStats[name] = (blackMoveStats[name] || 0) + 1;
-        localStorage.setItem('birthday_black_stats', JSON.stringify(blackMoveStats));
-        updateStats();
-    }
+    function incrementBlackStat(name) { blackMoveStats[name] = (blackMoveStats[name] || 0) + 1; localStorage.setItem('birthday_black_stats', JSON.stringify(blackMoveStats)); updateStats(); }
     
     function saveAll(){
         localStorage.setItem('birthday_white', JSON.stringify(whiteList));
@@ -881,37 +803,23 @@
     }
     
     function loadAll(){
-        const w=localStorage.getItem('birthday_white'), b=localStorage.getItem('birthday_black');
-        const f=localStorage.getItem('birthday_friends'), r=localStorage.getItem('birthday_relatives');
-        const stats = localStorage.getItem('birthday_black_stats');
-        const phrases = localStorage.getItem('birthday_custom_phrases');
-        whiteList = w ? JSON.parse(w) : [];
-        blackList = b ? JSON.parse(b) : [];
-        friendsArray = f ? JSON.parse(f) : [];
-        relativesArray = r ? JSON.parse(r) : [];
-        blackMoveStats = stats ? JSON.parse(stats) : {};
-        customPhrases = phrases ? JSON.parse(phrases) : {};
-        if(!Array.isArray(friendsArray)) friendsArray = [];
-        if(!Array.isArray(relativesArray)) relativesArray = [];
+        whiteList = (JSON.parse(localStorage.getItem('birthday_white')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
+        blackList = (JSON.parse(localStorage.getItem('birthday_black')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
+        friendsArray = JSON.parse(localStorage.getItem('birthday_friends')||'[]');
+        relativesArray = JSON.parse(localStorage.getItem('birthday_relatives')||'[]');
+        blackMoveStats = JSON.parse(localStorage.getItem('birthday_black_stats')||'{}');
+        customPhrases = JSON.parse(localStorage.getItem('birthday_custom_phrases')||'{}');
         friendsArray = [...new Map(friendsArray.map(n=>[n.toLowerCase(), n])).values()];
         relativesArray = [...new Map(relativesArray.map(n=>[n.toLowerCase(), n])).values()];
-        whiteList = whiteList.map(item => typeof item === 'string' ? { name: item, timestamp: null } : item);
-        blackList = blackList.map(item => typeof item === 'string' ? { name: item, timestamp: null } : item);
         updateStats();
     }
     
     function initSwipe(element, onSwipeLeft, onSwipeRight) {
         let touchStartX = 0;
-        element.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
+        element.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
         element.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].screenX;
-            const diff = touchEndX - touchStartX;
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) onSwipeRight();
-                else onSwipeLeft();
-            }
+            const diff = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(diff) > 50) { if (diff > 0) onSwipeRight(); else onSwipeLeft(); }
         });
     }
     
@@ -922,22 +830,16 @@
         return defaultBlackPhrases[Math.floor(Math.random()*defaultBlackPhrases.length)];
     }
     
-    // --- ПАНЕЛЬ ФРАЗ (показывается ТОЛЬКО для выбранного из white/black) ---
+    // --- ПАНЕЛЬ ФРАЗ ---
     function showPhrasesPanelForSelected(){
         const panel = document.getElementById('phrasesPanel');
         const titleDiv = document.getElementById('phrasesPanelTitle');
         const grid = document.getElementById('phrasesGrid');
         
-        if(!selectedPerson){
-            panel.classList.remove('visible');
-            return;
-        }
+        if(!selectedPerson){ panel.classList.remove('visible'); return; }
         const inWhite = whiteList.some(p => p.name === selectedPerson.name);
         const inBlack = blackList.some(p => p.name === selectedPerson.name);
-        if(!inWhite && !inBlack){
-            panel.classList.remove('visible');
-            return;
-        }
+        if(!inWhite && !inBlack){ panel.classList.remove('visible'); return; }
         const listType = inWhite ? 'white' : 'black';
         panel.classList.add('visible');
         
@@ -957,6 +859,8 @@
                 updateSelectedPersonPhraseDisplay();
                 showToast(`✅ Фраза для "${selectedPerson.name}" сохранена`);
                 renderWhiteBlack();
+                document.getElementById('customPhraseRow').style.display = 'none';
+                document.getElementById('customPhraseInput').value = '';
             };
         });
         updateSelectedPersonPhraseDisplay();
@@ -964,35 +868,31 @@
     
     function updateSelectedPersonPhraseDisplay(){
         const displayDiv = document.getElementById('selectedPersonPhraseDisplay');
-        if(!selectedPerson){
-            displayDiv.innerHTML = '💬 Выберите человека из списка';
-            return;
-        }
+        if(!selectedPerson){ displayDiv.innerHTML = '💬 Выберите человека из списка'; return; }
         const inWhite = whiteList.some(p => p.name === selectedPerson.name);
         const inBlack = blackList.some(p => p.name === selectedPerson.name);
-        if(!inWhite && !inBlack){
-            displayDiv.innerHTML = '💬 Выберите человека из белого или чёрного списка';
-            return;
-        }
+        if(!inWhite && !inBlack){ displayDiv.innerHTML = '💬 Выберите человека из белого или чёрного списка'; return; }
         const phraseData = customPhrases[selectedPerson.name];
-        if(phraseData){
-            displayDiv.innerHTML = `💬 <strong>${escapeHtml(selectedPerson.name)}</strong><br>📢 Фраза: «${escapeHtml(phraseData.phrase)}»<br><span style="font-size:0.65rem;">🎨 из списка: ${phraseData.listType==='white'?'🤍 белый':'🖤 чёрный'}</span>`;
-        } else {
-            displayDiv.innerHTML = `💬 Для <strong>${escapeHtml(selectedPerson.name)}</strong> пока нет фразы. Выберите готовую или напишите свою.`;
-        }
+        if(phraseData){ displayDiv.innerHTML = `💬 <strong>${escapeHtml(selectedPerson.name)}</strong><br>📢 Фраза: «${escapeHtml(phraseData.phrase)}»`; }
+        else { displayDiv.innerHTML = `💬 Для <strong>${escapeHtml(selectedPerson.name)}</strong> пока нет фразы. Выберите готовую или нажмите «Другое».`; }
     }
     
-    function applyCustomPhrase(){
-        if(!selectedPerson){
-            showToast('❌ Сначала выберите человека из белого или чёрного списка');
-            return;
-        }
+    // Кнопка "Другое" — показывает поле ввода
+    document.getElementById('otherPhraseBtn').onclick = () => {
+        if(!selectedPerson){ showToast('❌ Сначала выберите человека из списка'); return; }
         const inWhite = whiteList.some(p => p.name === selectedPerson.name);
         const inBlack = blackList.some(p => p.name === selectedPerson.name);
-        if(!inWhite && !inBlack){
-            showToast('❌ Выберите человека из белого или чёрного списка');
-            return;
-        }
+        if(!inWhite && !inBlack){ showToast('❌ Выберите человека из белого или чёрного списка'); return; }
+        const row = document.getElementById('customPhraseRow');
+        if(row.style.display === 'none' || row.style.display === '') row.style.display = 'flex';
+        else row.style.display = 'none';
+    };
+    
+    function applyCustomPhrase(){
+        if(!selectedPerson){ showToast('❌ Сначала выберите человека'); return; }
+        const inWhite = whiteList.some(p => p.name === selectedPerson.name);
+        const inBlack = blackList.some(p => p.name === selectedPerson.name);
+        if(!inWhite && !inBlack){ showToast('❌ Выберите человека из белого или чёрного списка'); return; }
         const listType = inWhite ? 'white' : 'black';
         let customText = document.getElementById('customPhraseInput').value.trim();
         if(!customText){ showToast('Введите свою фразу'); return; }
@@ -1002,36 +902,25 @@
         showToast(`✨ Своя фраза для "${selectedPerson.name}" добавлена`);
         renderWhiteBlack();
         document.getElementById('customPhraseInput').value = '';
+        document.getElementById('customPhraseRow').style.display = 'none';
     }
+    document.getElementById('applyCustomPhraseBtn').onclick = applyCustomPhrase;
     
+    // --- ГРУППЫ ---
     function renderGroups(){
         const friendsGrid = document.getElementById('friendsGrid');
-        if(friendsArray.length === 0){
-            friendsGrid.innerHTML = '<div style="padding:0.4rem; font-size:0.7rem; color:var(--text-soft); text-align:center;">➕ Добавьте друзей</div>';
-        } else {
-            friendsGrid.innerHTML = '';
-            friendsArray.forEach(friend => {
-                const chip = createPersonChip(friend, 'friends');
-                friendsGrid.appendChild(chip);
-            });
-        }
+        if(friendsArray.length === 0) friendsGrid.innerHTML = '<div style="padding:0.4rem; font-size:0.7rem; color:var(--text-soft); text-align:center;">➕ Добавьте друзей</div>';
+        else { friendsGrid.innerHTML = ''; friendsArray.forEach(friend => friendsGrid.appendChild(createPersonChip(friend, 'friends'))); }
         const relativesGrid = document.getElementById('relativesGrid');
-        if(relativesArray.length === 0){
-            relativesGrid.innerHTML = '<div style="padding:0.4rem; font-size:0.7rem; color:var(--text-soft); text-align:center;">👨‍👩‍👧 Добавьте родственников</div>';
-        } else {
-            relativesGrid.innerHTML = '';
-            relativesArray.forEach(rel => {
-                const chip = createPersonChip(rel, 'relatives');
-                relativesGrid.appendChild(chip);
-            });
-        }
+        if(relativesArray.length === 0) relativesGrid.innerHTML = '<div style="padding:0.4rem; font-size:0.7rem; color:var(--text-soft); text-align:center;">👨‍👩‍👧 Добавьте родственников</div>';
+        else { relativesGrid.innerHTML = ''; relativesArray.forEach(rel => relativesGrid.appendChild(createPersonChip(rel, 'relatives'))); }
         updateSelectedInfo();
     }
     
     function createPersonChip(name, group){
         const chip = document.createElement('div');
         chip.className = 'person-chip';
-        if(selectedPerson && selectedPerson.name === name && selectedPerson.listType === null) chip.classList.add('selected');
+        if(selectedPerson && selectedPerson.name === name && !whiteList.some(w=>w.name===name) && !blackList.some(b=>b.name===name)) chip.classList.add('selected');
         chip.innerHTML = `${escapeHtml(name)}<button class="remove-person-chip" data-name="${escapeHtml(name)}" data-group="${group}">✕</button>`;
         chip.addEventListener('click', (e) => {
             if(e.target.classList.contains('remove-person-chip')) return;
@@ -1040,54 +929,33 @@
             document.getElementById('phrasesPanel').classList.remove('visible');
             showToast(`✅ Выбран: ${name}`);
         });
-        const rmBtn = chip.querySelector('.remove-person-chip');
-        rmBtn.onclick = (e) => {
-            e.stopPropagation();
-            removePersonFromGroup(name, group);
-        };
+        chip.querySelector('.remove-person-chip').onclick = (e) => { e.stopPropagation(); removePersonFromGroup(name, group); };
         return chip;
     }
     
     function removePersonFromGroup(name, group){
-        if(group === 'friends'){
-            const idx = friendsArray.indexOf(name);
-            if(idx !== -1) friendsArray.splice(idx,1);
-        } else {
-            const idx = relativesArray.indexOf(name);
-            if(idx !== -1) relativesArray.splice(idx,1);
-        }
+        if(group === 'friends') friendsArray = friendsArray.filter(n => n !== name);
+        else relativesArray = relativesArray.filter(n => n !== name);
         if(selectedPerson && selectedPerson.name === name && selectedPerson.listType === null) selectedPerson = null;
         whiteList = whiteList.filter(p => p.name !== name);
         blackList = blackList.filter(p => p.name !== name);
         delete customPhrases[name];
-        saveAll();
-        renderGroups();
-        renderWhiteBlack();
-        showToast(`🗑 ${name} удалён`);
+        saveAll(); renderGroups(); renderWhiteBlack(); showToast(`🗑 ${name} удалён`);
+        if(selectedPerson === null) document.getElementById('phrasesPanel').classList.remove('visible');
     }
     
     function addToGroup(rawName, group){
         const norm = normalizeAndValidateName(rawName);
         if(!norm) return false;
         let targetArray = group === 'friends' ? friendsArray : relativesArray;
-        if(targetArray.some(p=>p.toLowerCase()===norm.toLowerCase())){
-            showInfo(`"${norm}" уже есть`);
-            return false;
-        }
-        targetArray.push(norm);
-        saveAll();
-        renderGroups();
-        showToast(`➕ ${norm} добавлен`);
-        return true;
+        if(targetArray.some(p=>p.toLowerCase()===norm.toLowerCase())){ showInfo(`"${norm}" уже есть`); return false; }
+        targetArray.push(norm); saveAll(); renderGroups(); showToast(`➕ ${norm} добавлен`); return true;
     }
     
     function updateSelectedInfo(){
         const infoDiv = document.getElementById('selectedInfoGlobal');
-        if(selectedPerson){
-            infoDiv.innerHTML = `✅ Выбран: <strong>${escapeHtml(selectedPerson.name)}</strong> (${selectedPerson.listType === 'white' ? 'белый список' : (selectedPerson.listType === 'black' ? 'чёрный список' : 'ещё не в списках')})`;
-        } else {
-            infoDiv.innerHTML = `✨ Никто не выбран (нажмите на имя)`;
-        }
+        if(selectedPerson){ infoDiv.innerHTML = `✅ Выбран: <strong>${escapeHtml(selectedPerson.name)}</strong>`; }
+        else { infoDiv.innerHTML = `✨ Никто не выбран (нажмите на имя)`; }
     }
     
     async function moveSelectedToWhite(){
@@ -1097,24 +965,8 @@
         const blackIdx = blackList.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
         if(blackIdx !== -1){
             const ok = await askYesNo(`«${name}» в ЧЁРНОМ. Переместить в БЕЛЫЙ?`);
-            if(ok){
-                const item = blackList[blackIdx];
-                blackList.splice(blackIdx,1);
-                whiteList.push({ name: item.name, timestamp: item.timestamp });
-                saveAll();
-                renderWhiteBlack();
-                showToast(`✨ ${name} перемещён в белый`);
-                selectedPerson = { name: name, listType: 'white' };
-                showPhrasesPanelForSelected();
-            }
-        } else {
-            whiteList.push({ name: name, timestamp: null });
-            saveAll();
-            renderWhiteBlack();
-            showToast(`🤍 ${name} добавлен в белый`);
-            selectedPerson = { name: name, listType: 'white' };
-            showPhrasesPanelForSelected();
-        }
+            if(ok){ const item = blackList[blackIdx]; blackList.splice(blackIdx,1); whiteList.push({ name: item.name, timestamp: item.timestamp }); saveAll(); renderWhiteBlack(); showToast(`✨ ${name} перемещён в белый`); selectedPerson = { name: name, listType: 'white' }; showPhrasesPanelForSelected(); }
+        } else { whiteList.push({ name: name, timestamp: null }); saveAll(); renderWhiteBlack(); showToast(`🤍 ${name} добавлен в белый`); selectedPerson = { name: name, listType: 'white' }; showPhrasesPanelForSelected(); }
         renderGroups();
     }
     
@@ -1125,26 +977,8 @@
         const whiteIdx = whiteList.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
         if(whiteIdx !== -1){
             const ok = await askYesNo(`«${name}» в БЕЛОМ. Перенести в ЧЁРНЫЙ?`);
-            if(ok){
-                const item = whiteList[whiteIdx];
-                whiteList.splice(whiteIdx,1);
-                blackList.push({ name: item.name, timestamp: item.timestamp });
-                incrementBlackStat(name);
-                saveAll();
-                renderWhiteBlack();
-                showToast(`🖤 ${name} перемещён в чёрный`);
-                selectedPerson = { name: name, listType: 'black' };
-                showPhrasesPanelForSelected();
-            }
-        } else {
-            blackList.push({ name: name, timestamp: null });
-            incrementBlackStat(name);
-            saveAll();
-            renderWhiteBlack();
-            showToast(`🚫 ${name} добавлен в чёрный`);
-            selectedPerson = { name: name, listType: 'black' };
-            showPhrasesPanelForSelected();
-        }
+            if(ok){ const item = whiteList[whiteIdx]; whiteList.splice(whiteIdx,1); blackList.push({ name: item.name, timestamp: item.timestamp }); incrementBlackStat(name); saveAll(); renderWhiteBlack(); showToast(`🖤 ${name} перемещён в чёрный`); selectedPerson = { name: name, listType: 'black' }; showPhrasesPanelForSelected(); }
+        } else { blackList.push({ name: name, timestamp: null }); incrementBlackStat(name); saveAll(); renderWhiteBlack(); showToast(`🚫 ${name} добавлен в чёрный`); selectedPerson = { name: name, listType: 'black' }; showPhrasesPanelForSelected(); }
         renderGroups();
     }
     
@@ -1152,50 +986,16 @@
         const whiteContainer = document.getElementById('whiteList');
         whiteContainer.innerHTML = '';
         if(whiteList.length === 0) whiteContainer.innerHTML = '<li class="empty-message">✨ Здесь будут те, кого поздравляю</li>';
-        else whiteList.forEach((item, idx)=>{
+        else whiteList.forEach((item, idx) => {
             const phrase = getPersonPhrase(item.name, 'white');
-            const li=document.createElement('li');
-            li.innerHTML = `
-                <div class="person-row">
-                    <span class="person-name">${escapeHtml(item.name)}</span>
-                    <button class="remove-person" data-list="white" data-idx="${idx}">✕</button>
-                </div>
-                <div class="timestamp-info">
-                    <span>${formatTimestamp(item.timestamp)}</span>
-                    <button class="edit-time-btn" data-name="${escapeHtml(item.name)}" data-list="white" data-idx="${idx}">✎ Указать время</button>
-                    <button class="edit-time-btn phrase-action-btn" data-name="${escapeHtml(item.name)}">🎁 Фраза</button>
-                </div>
-            `;
+            const li = document.createElement('li');
+            li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person" data-list="white" data-idx="${idx}">✕</button></div>
+                <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-name="${escapeHtml(item.name)}" data-list="white" data-idx="${idx}">✎ Указать время</button><button class="edit-time-btn phrase-action-btn" data-name="${escapeHtml(item.name)}">🎁 Фраза</button></div>`;
             li.querySelector('.remove-person').onclick = () => removeFromList('white', idx);
-            const editBtn = li.querySelector('.edit-time-btn');
-            editBtn.onclick = () => openTimeEditor('white', idx, item.name, item.timestamp);
-            const phraseBtn = li.querySelector('.phrase-action-btn');
-            phraseBtn.onclick = (e) => { e.stopPropagation(); showToastWithPhrase(item.name, phrase); };
-            li.addEventListener('click', () => {
-                selectedPerson = { name: item.name, listType: 'white' };
-                renderGroups();
-                showPhrasesPanelForSelected();
-                showToast(`✅ Выбран: ${item.name} (белый список)`);
-            });
-            initSwipe(li, 
-                () => {
-                    (async () => {
-                        const ok = await askYesNo(`Переместить "${item.name}" в чёрный список?`);
-                        if (ok) {
-                            const blackIdx = blackList.findIndex(p => p.name === item.name);
-                            if (blackIdx === -1) {
-                                blackList.push({ name: item.name, timestamp: item.timestamp });
-                                incrementBlackStat(item.name);
-                                whiteList.splice(idx, 1);
-                                saveAll();
-                                renderWhiteBlack();
-                                showToast(`🖤 ${item.name} перемещён в чёрный`);
-                            }
-                        }
-                    })();
-                },
-                () => { showToast(`👆 ${item.name}`); }
-            );
+            li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor('white', idx, item.name, item.timestamp); };
+            li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToastWithPhrase(item.name, phrase); };
+            li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: 'white' }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name} (белый список)`); });
+            initSwipe(li, () => { (async () => { if(await askYesNo(`Переместить "${item.name}" в чёрный?`)){ blackList.push({ name: item.name, timestamp: item.timestamp }); incrementBlackStat(item.name); whiteList.splice(idx,1); saveAll(); renderWhiteBlack(); showToast(`🖤 ${item.name} в чёрный`); } })(); }, () => { showToast(`👆 ${item.name}`); });
             whiteContainer.appendChild(li);
         });
         document.getElementById('whiteCount').innerText = whiteList.length;
@@ -1203,107 +1003,54 @@
         const blackContainer = document.getElementById('blackList');
         blackContainer.innerHTML = '';
         if(blackList.length === 0) blackContainer.innerHTML = '<li class="empty-message">🚫 Сюда попадают те, кого не поздравляю</li>';
-        else blackList.forEach((item, idx)=>{
+        else blackList.forEach((item, idx) => {
             const phrase = getPersonPhrase(item.name, 'black');
-            const li=document.createElement('li');
-            li.innerHTML = `
-                <div class="person-row">
-                    <span class="person-name">${escapeHtml(item.name)}</span>
-                    <button class="remove-person" data-list="black" data-idx="${idx}">✕</button>
-                </div>
-                <div class="timestamp-info">
-                    <span>${formatTimestamp(item.timestamp)}</span>
-                    <button class="edit-time-btn" data-name="${escapeHtml(item.name)}" data-list="black" data-idx="${idx}">✎ Указать время</button>
-                    <button class="edit-time-btn phrase-action-btn" data-name="${escapeHtml(item.name)}">💔 Фраза</button>
-                </div>
-            `;
+            const li = document.createElement('li');
+            li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person" data-list="black" data-idx="${idx}">✕</button></div>
+                <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-name="${escapeHtml(item.name)}" data-list="black" data-idx="${idx}">✎ Указать время</button><button class="edit-time-btn phrase-action-btn" data-name="${escapeHtml(item.name)}">💔 Фраза</button></div>`;
             li.querySelector('.remove-person').onclick = () => removeFromList('black', idx);
-            const editBtn = li.querySelector('.edit-time-btn');
-            editBtn.onclick = () => openTimeEditor('black', idx, item.name, item.timestamp);
-            const phraseBtn = li.querySelector('.phrase-action-btn');
-            phraseBtn.onclick = (e) => { e.stopPropagation(); showToastWithPhrase(item.name, phrase); };
-            li.addEventListener('click', () => {
-                selectedPerson = { name: item.name, listType: 'black' };
-                renderGroups();
-                showPhrasesPanelForSelected();
-                showToast(`✅ Выбран: ${item.name} (чёрный список)`);
-            });
-            initSwipe(li,
-                () => { showToast(`👆 ${item.name}`); },
-                () => {
-                    (async () => {
-                        const ok = await askYesNo(`Переместить "${item.name}" в белый список?`);
-                        if (ok) {
-                            const whiteIdx = whiteList.findIndex(p => p.name === item.name);
-                            if (whiteIdx === -1) {
-                                whiteList.push({ name: item.name, timestamp: item.timestamp });
-                                blackList.splice(idx, 1);
-                                saveAll();
-                                renderWhiteBlack();
-                                showToast(`🤍 ${item.name} перемещён в белый`);
-                            }
-                        }
-                    })();
-                }
-            );
+            li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor('black', idx, item.name, item.timestamp); };
+            li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToastWithPhrase(item.name, phrase); };
+            li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: 'black' }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name} (чёрный список)`); });
+            initSwipe(li, () => { showToast(`👆 ${item.name}`); }, () => { (async () => { if(await askYesNo(`Переместить "${item.name}" в белый?`)){ whiteList.push({ name: item.name, timestamp: item.timestamp }); blackList.splice(idx,1); saveAll(); renderWhiteBlack(); showToast(`🤍 ${item.name} в белый`); } })(); });
             blackContainer.appendChild(li);
         });
         document.getElementById('blackCount').innerText = blackList.length;
     }
     
-    function showToastWithPhrase(name, phrase){
-        showToast(`🎤 ${name}: «${phrase}»`);
-    }
+    function showToastWithPhrase(name, phrase){ showToast(`🎤 ${name}: «${phrase}»`); }
     
     function openTimeEditor(listType, idx, name, currentTimestamp) {
-        const modal = document.getElementById('timeModal');
-        const message = document.getElementById('timeModalMessage');
-        const picker = document.getElementById('datetimePicker');
+        const modal = document.getElementById('timeModal'), message = document.getElementById('timeModalMessage'), picker = document.getElementById('datetimePicker');
         message.textContent = `Укажите дату и время для "${name}"`;
-        if(currentTimestamp) picker.value = currentTimestamp;
-        else picker.value = '';
-        
-        const saveBtn = document.getElementById('timeModalSave');
-        const cancelBtn = document.getElementById('timeModalCancel');
-        const clearBtn = document.getElementById('timeModalClear');
-        
+        if(currentTimestamp) picker.value = currentTimestamp; else picker.value = '';
         const closeHandler = () => modal.classList.remove('active');
-        saveBtn.onclick = () => {
+        document.getElementById('timeModalSave').onclick = () => {
             const val = picker.value;
             if(listType === 'white') whiteList[idx].timestamp = val || null;
             else blackList[idx].timestamp = val || null;
-            saveAll();
-            renderWhiteBlack();
-            showToast(`Время для "${name}" сохранено`);
-            closeHandler();
+            saveAll(); renderWhiteBlack(); showToast(`Время для "${name}" сохранено`); closeHandler();
         };
-        cancelBtn.onclick = closeHandler;
-        clearBtn.onclick = () => {
+        document.getElementById('timeModalCancel').onclick = closeHandler;
+        document.getElementById('timeModalClear').onclick = () => {
             if(listType === 'white') whiteList[idx].timestamp = null;
             else blackList[idx].timestamp = null;
-            saveAll();
-            renderWhiteBlack();
-            showToast(`Время для "${name}" очищено`);
-            closeHandler();
+            saveAll(); renderWhiteBlack(); showToast(`Время для "${name}" очищено`); closeHandler();
         };
         modal.classList.add('active');
     }
     
     function removeFromList(listType, idx){
         const removed = listType === 'white' ? whiteList.splice(idx,1)[0] : blackList.splice(idx,1)[0];
-        saveAll();
-        renderWhiteBlack();
-        showToast(`❌ ${removed.name} удалён из ${listType === 'white' ? 'белого' : 'чёрного'}`);
-        if(selectedPerson && selectedPerson.name === removed.name) {
-            selectedPerson = null;
-            document.getElementById('phrasesPanel').classList.remove('visible');
-        }
+        saveAll(); renderWhiteBlack(); showToast(`❌ ${removed.name} удалён из ${listType === 'white' ? 'белого' : 'чёрного'}`);
+        if(selectedPerson && selectedPerson.name === removed.name) { selectedPerson = null; document.getElementById('phrasesPanel').classList.remove('visible'); }
         renderGroups();
     }
     
     async function clearWhite(){ if(whiteList.length && await askYesNo('Очистить белый список?')){ whiteList=[]; saveAll(); renderWhiteBlack(); showToast('Белый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     async function clearBlack(){ if(blackList.length && await askYesNo('Очистить чёрный список?')){ blackList=[]; saveAll(); renderWhiteBlack(); showToast('Чёрный список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     
+    // МОДАЛКИ
     let modalResolve=null;
     const modal=document.getElementById('customModal'), modalIcon=document.getElementById('modalIcon'), modalMessage=document.getElementById('modalMessage'), modalButtons=document.getElementById('modalButtons');
     function showModal(icon,msg,buttons){ return new Promise(resolve=>{ modalResolve=resolve; modalIcon.textContent=icon; modalMessage.textContent=msg; modalButtons.innerHTML=''; buttons.forEach(btn=>{ const b=document.createElement('button'); b.textContent=btn; b.className=`modal-btn ${(btn==='Да'||btn==='OK')?'confirm':'cancel'}`; b.onclick=()=>{ modal.classList.remove('active'); resolve(btn); }; modalButtons.appendChild(b); }); modal.classList.add('active'); }); }
@@ -1314,21 +1061,15 @@
     function escapeHtml(str){ return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; return '&gt;'; }); }
     
     // ИНИЦИАЛИЗАЦИЯ
-    loadBirthday();
-    loadAll();
-    renderGroups();
-    renderWhiteBlack();
-    
-    document.getElementById('addFriendBtn').onclick=()=>{ const val=document.getElementById('newFriendName').value; addToGroup(val,'friends'); document.getElementById('newFriendName').value=''; };
-    document.getElementById('addRelativeBtn').onclick=()=>{ const val=document.getElementById('newRelativeName').value; addToGroup(val,'relatives'); document.getElementById('newRelativeName').value=''; };
-    document.getElementById('moveSelectedToWhite').onclick=moveSelectedToWhite;
-    document.getElementById('moveSelectedToBlack').onclick=moveSelectedToBlack;
-    document.getElementById('clearWhiteBtn').onclick=clearWhite;
-    document.getElementById('clearBlackBtn').onclick=clearBlack;
-    document.getElementById('applyCustomPhraseBtn').onclick=applyCustomPhrase;
-    
-    document.getElementById('newFriendName').addEventListener('keypress',e=>{ if(e.key==='Enter'){ document.getElementById('addFriendBtn').click(); e.preventDefault(); } });
-    document.getElementById('newRelativeName').addEventListener('keypress',e=>{ if(e.key==='Enter'){ document.getElementById('addRelativeBtn').click(); e.preventDefault(); } });
+    loadBirthday(); loadAll(); renderGroups(); renderWhiteBlack();
+    document.getElementById('addFriendBtn').onclick = () => { addToGroup(document.getElementById('newFriendName').value, 'friends'); document.getElementById('newFriendName').value = ''; };
+    document.getElementById('addRelativeBtn').onclick = () => { addToGroup(document.getElementById('newRelativeName').value, 'relatives'); document.getElementById('newRelativeName').value = ''; };
+    document.getElementById('moveSelectedToWhite').onclick = moveSelectedToWhite;
+    document.getElementById('moveSelectedToBlack').onclick = moveSelectedToBlack;
+    document.getElementById('clearWhiteBtn').onclick = clearWhite;
+    document.getElementById('clearBlackBtn').onclick = clearBlack;
+    document.getElementById('newFriendName').addEventListener('keypress', e => { if(e.key === 'Enter') document.getElementById('addFriendBtn').click(); });
+    document.getElementById('newRelativeName').addEventListener('keypress', e => { if(e.key === 'Enter') document.getElementById('addRelativeBtn').click(); });
 </script>
 </body>
 </html>
