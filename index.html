@@ -114,16 +114,57 @@
             flex-direction: column;
         }
 
-        .legal-block, .version-block {
+        .legal-block {
             background: var(--legal-bg);
             border-radius: 1.2rem;
-            padding: 0.8rem 1rem;
+            padding: 1rem 1.2rem;
             margin-top: 1rem;
             border: 1px solid var(--legal-border);
             font-size: 0.7rem;
         }
-        .version-block { background: var(--version-bg); margin-top: 0.5rem; }
-        .version-title { font-weight: bold; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; color: var(--accent); }
+        .legal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            color: var(--accent);
+            justify-content: space-between;
+        }
+        .legal-content {
+            margin-top: 0.8rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--legal-border);
+            color: var(--text-soft);
+            line-height: 1.45;
+        }
+        .legal-content p { margin-bottom: 0.5rem; }
+        .legal-footer {
+            margin-top: 0.5rem;
+            font-size: 0.65rem;
+            text-align: center;
+            border-top: 1px dashed var(--legal-border);
+            padding-top: 0.5rem;
+        }
+
+        .version-block {
+            background: var(--version-bg);
+            border-radius: 1.2rem;
+            padding: 0.8rem 1rem;
+            margin-top: 0.5rem;
+            border: 1px solid var(--legal-border);
+        }
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .version-title { font-weight: bold; display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-size: 0.75rem; }
+        .reset-btn { background: var(--accent); color: white; border: none; border-radius: 2rem; padding: 0.2rem 0.8rem; font-size: 0.65rem; cursor: pointer; }
         .changelog { font-size: 0.65rem; color: var(--text-soft); padding-left: 1rem; }
         .changelog li { margin: 0.1rem 0; }
 
@@ -339,7 +380,14 @@
             padding: 0.8rem;
             border: 1px solid var(--border-light);
         }
-        .stats-title { font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .stats-title { font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 0.4rem; }
+        .clear-stats-btn { background: none; border: 1px solid var(--border-light); border-radius: 1rem; padding: 0.2rem 0.6rem; font-size: 0.6rem; cursor: pointer; color: var(--text-soft); }
         .stats-list { font-size: 0.7rem; max-height: 150px; overflow-y: auto; }
         .stats-item { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid var(--border-light); }
         
@@ -434,27 +482,37 @@
             </div>
             
             <div class="stats-card">
-                <div class="stats-title">📊 Статистика попаданий в чёрный список</div>
+                <div class="stats-header">
+                    <div class="stats-title">📊 Статистика попаданий в чёрный список</div>
+                    <button class="clear-stats-btn" id="clearStatsBtn">🗑 очистить</button>
+                </div>
                 <div class="stats-list" id="statsList">Нет данных</div>
             </div>
             
             <div class="version-block">
-                <div class="version-title">📌 Версия 2.2 &nbsp;| &nbsp;Изменения:</div>
+                <div class="version-header">
+                    <div class="version-title">📌 Версия 2.3 | Изменения:</div>
+                    <button class="reset-btn" id="resetAllBtn">🔄 Сбросить всё</button>
+                </div>
                 <ul class="changelog">
-                    <li>🎨 Исправлена видимость фраз в тёмной теме (контрастные цвета)</li>
-                    <li>➕ Отображение фразы под именем в списке</li>
-                    <li>✖ Кнопка удалить фразу (крестик рядом с фразой)</li>
+                    <li>🗑 Кнопка очистки статистики</li>
+                    <li>🔄 Кнопка сброса всех данных</li>
+                    <li>⚖️ Полная политика конфиденциальности</li>
+                    <li>🎨 Исправлена видимость фраз в тёмной теме</li>
                     <li>📝 Своя фраза через кнопку «Другое»</li>
                 </ul>
             </div>
 
             <div class="legal-block">
-                <div class="legal-header" id="legalHeader" style="display:flex; justify-content:space-between; cursor:pointer;">
-                    <span>⚖️ Политика конфиденциальности</span>
+                <div class="legal-header" id="legalHeader">
+                    <span>⚖️ Политика конфиденциальности и отказ от ответственности</span>
                     <span id="legalToggleIcon">▼</span>
                 </div>
-                <div class="legal-content" id="legalContent" style="margin-top:0.5rem;">
-                    <p>Данные хранятся в localStorage. Автор не собирает персональные данные. Лицензия MIT.</p>
+                <div class="legal-content" id="legalContent">
+                    <p>📌 <strong>Хранение данных:</strong> Все данные сохраняются исключительно в вашем браузере (localStorage). Автор не собирает, не обрабатывает и не передаёт персональные данные третьим лицам в соответствии с Федеральным законом РФ № 152-ФЗ «О персональных данных».</p>
+                    <p>⚠️ <strong>Отказ от ответственности:</strong> Вы используете данный инструмент на свой собственный риск. Автор не несёт ответственности за возможную потерю данных, некорректную работу или иные последствия.</p>
+                    <p>📜 <strong>Лицензия MIT:</strong> Исходный код распространяется свободно. Любой желающий может скопировать, модифицировать и использовать код в своих целях с обязательным указанием авторства.</p>
+                    <div class="legal-footer">© 2026 · Именинный реестр · Лицензия MIT · Свободное использование с указанием авторства</div>
                 </div>
             </div>
         </div>
@@ -528,10 +586,20 @@
         updateStats();
     }
     function updateStats() { let e=Object.entries(blackMoveStats).sort((a,b)=>b[1]-a[1]); let c=document.getElementById('statsList'); if(!e.length) c.innerHTML='<div class="stats-item">Нет данных</div>'; else c.innerHTML=e.map(([n,cnt])=>`<div class="stats-item"><span>${escapeHtml(n)}</span><span>🚫 ${cnt} раз</span></div>`).join(''); }
+    function clearStats() { blackMoveStats = {}; saveAll(); updateStats(); showToast('📊 Статистика очищена'); }
     function incrementBlackStat(name) { blackMoveStats[name] = (blackMoveStats[name]||0)+1; saveAll(); updateStats(); }
     function formatTimestamp(iso) { if(!iso) return '⏱️ не указано'; let d=new Date(iso); return d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
     function getPersonPhrase(name, listType) { let c=customPhrases[name]; if(c) return c.phrase; if(listType==='white') return defaultWhitePhrases[Math.floor(Math.random()*defaultWhitePhrases.length)]; return defaultBlackPhrases[Math.floor(Math.random()*defaultBlackPhrases.length)]; }
     function deletePhrase(name) { delete customPhrases[name]; saveAll(); renderWhiteBlack(); showToast(`🗑 Фраза для "${name}" удалена`); if(selectedPerson && selectedPerson.name===name) updateSelectedPersonPhraseDisplay(); }
+    
+    function resetAllData() {
+        if(confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные:\n- Белый и чёрный списки\n- Друзей и родственников\n- Все фразы\n- Статистику\n- Дату рождения\n\nПродолжить?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+    document.getElementById('resetAllBtn').onclick = resetAllData;
+    document.getElementById('clearStatsBtn').onclick = () => { if(confirm('Очистить статистику попаданий в чёрный список?')) clearStats(); };
     
     function renderWhiteBlack() {
         let wc = document.getElementById('whiteList'); wc.innerHTML = '';
