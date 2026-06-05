@@ -200,7 +200,7 @@
             color: var(--text-main);
         }
         .modal-icon { font-size: 2.8rem; margin-bottom: 0.5rem; }
-        .modal-message { font-size: 1rem; margin: 0.5rem 0 1.5rem; line-height: 1.4; }
+        .modal-message { font-size: 1rem; margin: 0.5rem 0 1.5rem; line-height: 1.4; white-space: pre-line; }
         .modal-buttons { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
         .modal-btn {
             border: none;
@@ -213,6 +213,8 @@
             color: var(--text-main);
         }
         .modal-btn.confirm { background: var(--accent); color: white; }
+        .modal-btn.confirm:hover { filter: brightness(1.05); }
+        .modal-btn.cancel:hover { background: var(--text-soft); color: white; }
 
         .toast {
             position: fixed;
@@ -491,14 +493,14 @@
             
             <div class="version-block">
                 <div class="version-header">
-                    <div class="version-title">📌 Версия 2.3 | Изменения:</div>
+                    <div class="version-title">📌 Версия 2.4 | Изменения:</div>
                     <button class="reset-btn" id="resetAllBtn">🔄 Сбросить всё</button>
                 </div>
                 <ul class="changelog">
+                    <li>🎨 Красивые модальные окна подтверждения (без confirm)</li>
                     <li>🗑 Кнопка очистки статистики</li>
                     <li>🔄 Кнопка сброса всех данных</li>
                     <li>⚖️ Полная политика конфиденциальности</li>
-                    <li>🎨 Исправлена видимость фраз в тёмной теме</li>
                     <li>📝 Своя фраза через кнопку «Другое»</li>
                 </ul>
             </div>
@@ -527,8 +529,8 @@
     </div>
 </div>
 
-<div id="dateModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">🎂</div><div class="modal-message">ДД.ММ.ГГГГ</div><input type="text" id="birthdayTextInput" style="width:100%; padding:0.6rem; margin:1rem 0;"><div class="modal-buttons"><button class="modal-btn cancel" id="dateModalCancel">Отмена</button><button class="modal-btn confirm" id="dateModalSave">Сохранить</button></div></div></div>
-<div id="timeModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">⏰</div><div class="modal-message" id="timeModalMessage"></div><input type="datetime-local" id="datetimePicker" style="width:100%; margin:1rem 0;"><div class="modal-buttons"><button class="modal-btn cancel" id="timeModalCancel">Отмена</button><button class="modal-btn confirm" id="timeModalSave">Сохранить</button><button class="modal-btn" id="timeModalClear">Очистить</button></div></div></div>
+<div id="dateModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">🎂</div><div class="modal-message">Введите дату рождения в формате<br><strong>ДД.ММ.ГГГГ</strong></div><input type="text" id="birthdayTextInput" placeholder="ДД.ММ.ГГГГ" style="width:100%; padding:0.6rem; margin:1rem 0; border-radius:2rem; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-main);"><div class="modal-buttons"><button class="modal-btn cancel" id="dateModalCancel">Отмена</button><button class="modal-btn confirm" id="dateModalSave">Сохранить</button></div></div></div>
+<div id="timeModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">⏰</div><div class="modal-message" id="timeModalMessage"></div><input type="datetime-local" id="datetimePicker" style="width:100%; margin:1rem 0; padding:0.5rem; border-radius:2rem; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-main);"><div class="modal-buttons"><button class="modal-btn cancel" id="timeModalCancel">Отмена</button><button class="modal-btn confirm" id="timeModalSave">Сохранить</button><button class="modal-btn" id="timeModalClear">Очистить</button></div></div></div>
 <div id="customModal" class="custom-modal"><div class="modal-content"><div class="modal-icon" id="modalIcon">❓</div><div class="modal-message" id="modalMessage"></div><div class="modal-buttons" id="modalButtons"></div></div></div>
 <div id="toast" class="toast"></div>
 
@@ -592,14 +594,15 @@
     function getPersonPhrase(name, listType) { let c=customPhrases[name]; if(c) return c.phrase; if(listType==='white') return defaultWhitePhrases[Math.floor(Math.random()*defaultWhitePhrases.length)]; return defaultBlackPhrases[Math.floor(Math.random()*defaultBlackPhrases.length)]; }
     function deletePhrase(name) { delete customPhrases[name]; saveAll(); renderWhiteBlack(); showToast(`🗑 Фраза для "${name}" удалена`); if(selectedPerson && selectedPerson.name===name) updateSelectedPersonPhraseDisplay(); }
     
-    function resetAllData() {
-        if(confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные:\n- Белый и чёрный списки\n- Друзей и родственников\n- Все фразы\n- Статистику\n- Дату рождения\n\nПродолжить?')) {
+    async function resetAllData() {
+        const ok = await askYesNo('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные:\n• Белый и чёрный списки\n• Друзей и родственников\n• Все фразы\n• Статистику\n• Дату рождения\n\nПродолжить?');
+        if (ok) {
             localStorage.clear();
             location.reload();
         }
     }
     document.getElementById('resetAllBtn').onclick = resetAllData;
-    document.getElementById('clearStatsBtn').onclick = () => { if(confirm('Очистить статистику попаданий в чёрный список?')) clearStats(); };
+    document.getElementById('clearStatsBtn').onclick = async () => { if(await askYesNo('Очистить статистику попаданий в чёрный список?')) clearStats(); };
     
     function renderWhiteBlack() {
         let wc = document.getElementById('whiteList'); wc.innerHTML = '';
@@ -731,7 +734,7 @@
     }
     
     function removeFromList(listType, idx) { let r = listType==='white' ? whiteList.splice(idx,1)[0] : blackList.splice(idx,1)[0]; delete customPhrases[r.name]; saveAll(); renderWhiteBlack(); showToast(`❌ ${r.name} удалён`); if(selectedPerson && selectedPerson.name===r.name) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } renderGroups(); }
-    function openTimeEditor(listType, idx, name, ts) { let m=document.getElementById('timeModal'), p=document.getElementById('datetimePicker'); document.getElementById('timeModalMessage').innerText=`⏰ ${name}`; p.value=ts||''; let close=()=>m.classList.remove('active'); document.getElementById('timeModalSave').onclick=()=>{ let v=p.value; if(listType==='white') whiteList[idx].timestamp=v||null; else blackList[idx].timestamp=v||null; saveAll(); renderWhiteBlack(); showToast(`Время для "${name}" сохранено`); close(); }; document.getElementById('timeModalCancel').onclick=close; document.getElementById('timeModalClear').onclick=()=>{ if(listType==='white') whiteList[idx].timestamp=null; else blackList[idx].timestamp=null; saveAll(); renderWhiteBlack(); showToast(`Время очищено`); close(); }; m.classList.add('active'); }
+    function openTimeEditor(listType, idx, name, ts) { let m=document.getElementById('timeModal'), p=document.getElementById('datetimePicker'); document.getElementById('timeModalMessage').innerHTML=`⏰ Укажите дату и время для<br><strong>${escapeHtml(name)}</strong>`; p.value=ts||''; let close=()=>m.classList.remove('active'); document.getElementById('timeModalSave').onclick=()=>{ let v=p.value; if(listType==='white') whiteList[idx].timestamp=v||null; else blackList[idx].timestamp=v||null; saveAll(); renderWhiteBlack(); showToast(`Время для "${name}" сохранено`); close(); }; document.getElementById('timeModalCancel').onclick=close; document.getElementById('timeModalClear').onclick=()=>{ if(listType==='white') whiteList[idx].timestamp=null; else blackList[idx].timestamp=null; saveAll(); renderWhiteBlack(); showToast(`Время очищено`); close(); }; m.classList.add('active'); }
     async function clearWhite(){ if(whiteList.length && await askYesNo('Очистить белый список?')){ whiteList=[]; saveAll(); renderWhiteBlack(); showToast('Белый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     async function clearBlack(){ if(blackList.length && await askYesNo('Очистить чёрный список?')){ blackList=[]; saveAll(); renderWhiteBlack(); showToast('Чёрный список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     
