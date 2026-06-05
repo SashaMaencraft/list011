@@ -36,7 +36,7 @@
 
 **Исходный код:** [https://github.com/SashaMaencraft/list011](https://github.com/SashaMaencraft/list011)  
 **Лицензия:** MIT  
-**Версия:** 2.0
+**Версия:** 2.5
 
 ---
 
