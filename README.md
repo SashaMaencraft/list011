@@ -36,7 +36,7 @@
 
 ---
 
-## 🚀 Демо
+## 🚀 Демо | Версия 2.5 | Изменения:
 
 Проект доступен по ссылке:  
 🔗 [https://sashamaencraft.github.io/list011/](https://sashamaencraft.github.io/list011/)
