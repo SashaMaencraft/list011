@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Именинный реестр — друзья и родственники</title>
+    <title>Именинный реестр — друзья и родственники (v2.6)</title>
     <style>
         * {
             margin: 0;
@@ -30,6 +30,8 @@
             --white-list-text: #2b5e2f;
             --black-list-bg: #f3e9e2;
             --black-list-text: #ac4e3b;
+            --gray-list-bg: #e9f0f5;
+            --gray-list-text: #2c6e9e;
             --toast-bg: #2c2824e6;
             --shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
             --sidebar-bg: rgba(255, 250, 240, 0.7);
@@ -41,7 +43,11 @@
             --phrase-hover: #b87c4f;
             --other-btn-bg: #b87c4f;
             --other-btn-text: white;
-            --version-bg: #e8e0d5;
+            --version-btn-bg: #b87c4f;
+            --version-card-v25: #fef5e8;
+            --version-card-v26: #e8f0fe;
+            --version-border-v25: #e8d5b5;
+            --version-border-v26: #c5d5e8;
         }
 
         body.dark {
@@ -62,6 +68,8 @@
             --white-list-text: #b8e0b0;
             --black-list-bg: #3d2a24;
             --black-list-text: #f0a392;
+            --gray-list-bg: #2a3a4a;
+            --gray-list-text: #9ac8e8;
             --toast-bg: #000000cc;
             --shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.5);
             --sidebar-bg: #2a2724cc;
@@ -73,7 +81,11 @@
             --phrase-hover: #e2a16a;
             --other-btn-bg: #e2a16a;
             --other-btn-text: #1e1b18;
-            --version-bg: #2a2724;
+            --version-btn-bg: #e2a16a;
+            --version-card-v25: #3d3528;
+            --version-card-v26: #283545;
+            --version-border-v25: #5a4a30;
+            --version-border-v26: #3a5570;
         }
 
         body {
@@ -150,25 +162,27 @@
             padding-top: 0.5rem;
         }
 
-        .version-block {
-            background: var(--version-bg);
-            border-radius: 1.2rem;
-            padding: 0.8rem 1rem;
-            margin-top: 0.5rem;
-            border: 1px solid var(--legal-border);
-        }
-        .version-header {
+        .version-button {
+            background: var(--version-btn-bg);
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            width: fit-content;
+            align-self: center;
+            font-weight: bold;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 0.5rem;
-            margin-bottom: 0.5rem;
+            transition: transform 0.2s;
         }
-        .version-title { font-weight: bold; display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-size: 0.75rem; }
-        .reset-btn { background: var(--accent); color: white; border: none; border-radius: 2rem; padding: 0.2rem 0.8rem; font-size: 0.65rem; cursor: pointer; }
-        .changelog { font-size: 0.65rem; color: var(--text-soft); padding-left: 1rem; }
-        .changelog li { margin: 0.1rem 0; }
+        .version-button:hover {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+        }
 
         .custom-modal {
             position: fixed;
@@ -176,8 +190,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,18 +206,31 @@
         }
         .modal-content {
             background: var(--card-bg);
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
+            max-height: 85vh;
             border-radius: 2rem;
             padding: 1.5rem;
             text-align: center;
             box-shadow: 0 25px 40px -12px black;
             border: 1px solid var(--border-light);
             color: var(--text-main);
+            overflow-y: auto;
+        }
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--border-light);
+            border-radius: 3px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
         }
         .modal-icon { font-size: 2.8rem; margin-bottom: 0.5rem; }
-        .modal-message { font-size: 1rem; margin: 0.5rem 0 1.5rem; line-height: 1.4; white-space: pre-line; }
-        .modal-buttons { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+        .modal-message { font-size: 1rem; margin: 0.5rem 0 1.5rem; line-height: 1.4; text-align: left; }
+        .modal-buttons { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
         .modal-btn {
             border: none;
             background: var(--input-border);
@@ -217,6 +244,86 @@
         .modal-btn.confirm { background: var(--accent); color: white; }
         .modal-btn.confirm:hover { filter: brightness(1.05); }
         .modal-btn.cancel:hover { background: var(--text-soft); color: white; }
+        .modal-btn.danger { background: #c0392b; color: white; }
+        .modal-btn.danger:hover { background: #e74c3c; }
+
+        /* Стили для карточек версий */
+        .version-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 0.5rem 0;
+        }
+        .version-card {
+            border-radius: 1.2rem;
+            padding: 1rem;
+            border-left: 4px solid;
+            transition: transform 0.15s;
+        }
+        .version-card:hover {
+            transform: translateX(4px);
+        }
+        .version-card.v25 {
+            background: var(--version-card-v25);
+            border-left-color: #d4a373;
+            border-top: 1px solid var(--version-border-v25);
+            border-right: 1px solid var(--version-border-v25);
+            border-bottom: 1px solid var(--version-border-v25);
+        }
+        .version-card.v26 {
+            background: var(--version-card-v26);
+            border-left-color: #6c9ebf;
+            border-top: 1px solid var(--version-border-v26);
+            border-right: 1px solid var(--version-border-v26);
+            border-bottom: 1px solid var(--version-border-v26);
+        }
+        .version-header-card {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: bold;
+        }
+        .version-badge-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 0.25rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+        }
+        .version-date {
+            font-size: 0.65rem;
+            color: var(--text-soft);
+        }
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .feature-list li {
+            padding: 0.3rem 0;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px dashed var(--border-light);
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .feature-icon {
+            font-size: 1rem;
+            min-width: 24px;
+        }
+        .separator {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin: 0.5rem 0;
+            letter-spacing: 2px;
+        }
 
         .toast {
             position: fixed;
@@ -321,10 +428,11 @@
         .add-row input { flex: 1; padding: 0.5rem 0.8rem; font-size: 0.8rem; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 2rem; color: var(--text-main); }
         .small-btn { background: var(--badge-bg); color: var(--badge-text); border: none; padding: 0 1rem; border-radius: 2rem; font-weight: bold; cursor: pointer; }
         .selected-info-global { margin: 0.8rem 0; font-size: 0.8rem; background: var(--card-bg); border-radius: 1.2rem; padding: 0.6rem; text-align: center; color: var(--text-soft); border: 1px dashed var(--input-border); }
-        .action-buttons { display: flex; gap: 0.7rem; margin: 0.5rem 0; }
-        .btn-sm { flex: 1; padding: 0.6rem; font-size: 0.8rem; border-radius: 2rem; font-weight: bold; cursor: pointer; border: none; }
+        .action-buttons { display: flex; gap: 0.7rem; margin: 0.5rem 0; flex-wrap: wrap; }
+        .btn-sm { flex: 1; padding: 0.6rem; font-size: 0.8rem; border-radius: 2rem; font-weight: bold; cursor: pointer; border: none; min-width: 100px; }
         .btn-white-sm { background: var(--white-list-bg); color: var(--white-list-text); }
         .btn-black-sm { background: var(--black-list-bg); color: var(--black-list-text); }
+        .btn-gray-sm { background: var(--gray-list-bg); color: var(--gray-list-text); }
 
         .birthday-section {
             background: var(--accent-soft);
@@ -436,6 +544,7 @@
             .sidebar-col { order: 2; }
             .main-col { order: 1; }
             body { padding: 0.8rem; }
+            .feature-list li { font-size: 0.7rem; }
         }
     </style>
 </head>
@@ -448,7 +557,7 @@
                 <div class="badge">🎂 личный архив</div>
                 <h1>Именинный реестр</h1>
                 <div class="date" id="displayDate">— — —</div>
-                <div class="sub">Кого поздравляю, а кто в чёрном списке</div>
+                <div class="sub">Кого поздравляю, а кто в чёрном списке + офлайн</div>
             </div>
 
             <div class="birthday-section">
@@ -479,6 +588,14 @@
 
             <div class="list-card">
                 <div class="list-header">
+                    <div class="list-title">📱 Серый список / Офлайн <span class="count" id="grayCount">0</span></div>
+                    <button class="clear-list" id="clearGrayBtn">очистить</button>
+                </div>
+                <ul class="people-list" id="grayList"></ul>
+            </div>
+
+            <div class="list-card">
+                <div class="list-header">
                     <div class="list-title">🖤 Чёрный список <span class="count" id="blackCount">0</span></div>
                     <button class="clear-list" id="clearBlackBtn">очистить</button>
                 </div>
@@ -487,24 +604,15 @@
             
             <div class="stats-card">
                 <div class="stats-header">
-                    <div class="stats-title">📊 Статистика попаданий в чёрный список</div>
+                    <div class="stats-title">📊 Статистика попаданий</div>
                     <button class="clear-stats-btn" id="clearStatsBtn">🗑 очистить</button>
                 </div>
                 <div class="stats-list" id="statsList">Нет данных</div>
             </div>
-            
-            <div class="version-block">
-                <div class="version-header">
-                    <div class="version-title">📌 Версия 2.5 | Изменения:</div>
-                    <button class="reset-btn" id="resetAllBtn">🔄 Сбросить всё</button>
-                </div>
-                <ul class="changelog">
-                    <li>🔗 Ссылка на GitHub с исходным кодом</li>
-                    <li>🎨 Красивые модальные окна подтверждения</li>
-                    <li>🗑 Кнопка очистки статистики</li>
-                    <li>📝 Своя фраза через кнопку «Другое»</li>
-                </ul>
-            </div>
+
+            <button class="version-button" id="versionButton">
+                📋 История версий
+            </button>
 
             <div class="legal-block">
                 <div class="legal-header" id="legalHeader">
@@ -525,8 +633,57 @@
         <div class="palette-card"><div class="palette-header">👥 Друзья</div><div class="people-grid" id="friendsGrid"></div><div class="add-row"><input type="text" id="newFriendName" placeholder="Имя"><button class="small-btn" id="addFriendBtn">Добавить</button></div></div>
         <div class="palette-card"><div class="palette-header">👨‍👩‍👧‍👦 Родственники</div><div class="people-grid" id="relativesGrid"></div><div class="add-row"><input type="text" id="newRelativeName" placeholder="Имя"><button class="small-btn" id="addRelativeBtn">Добавить</button></div></div>
         <div class="selected-info-global" id="selectedInfoGlobal">✨ Никто не выбран</div>
-        <div class="action-buttons"><button class="btn-sm btn-white-sm" id="moveSelectedToWhite">🤍 В белый список</button><button class="btn-sm btn-black-sm" id="moveSelectedToBlack">🖤 В чёрный список</button></div>
+        <div class="action-buttons">
+            <button class="btn-sm btn-white-sm" id="moveSelectedToWhite">🤍 В белый список</button>
+            <button class="btn-sm btn-gray-sm" id="moveSelectedToGray">📱 В серый (офлайн)</button>
+            <button class="btn-sm btn-black-sm" id="moveSelectedToBlack">🖤 В чёрный список</button>
+        </div>
         <div style="margin-top:0.6rem; font-size:0.7rem; color:var(--text-soft); text-align:center;">💡 Кликни по имени в списках → появятся фразы</div>
+    </div>
+</div>
+
+<!-- Модальное окно для версий с красивыми карточками -->
+<div id="versionModal" class="custom-modal">
+    <div class="modal-content">
+        <div class="modal-icon">📋</div>
+        <div class="modal-message">
+            <strong style="font-size: 1.2rem; display: block; text-align: center; margin-bottom: 1rem;">📜 История обновлений</strong>
+            <div class="version-cards">
+                <!-- Блок версии 2.6 -->
+                <div class="version-card v26">
+                    <div class="version-header-card">
+                        <span class="version-badge-card">🆕 v2.6 — текущая</span>
+                        <span class="version-date">(июнь 2026)</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">📱</span> Добавлен «Серый список» (временно не может написать / офлайн)</li>
+                        <li><span class="feature-icon">💬</span> Свои фразы для серого списка</li>
+                        <li><span class="feature-icon">📊</span> Статистика теперь включает и серый список</li>
+                        <li><span class="feature-icon">🎨</span> Красивые карточки версий в модальном окне</li>
+                    </ul>
+                </div>
+                
+                <div class="separator">✦ ✦ ✦</div>
+                
+                <!-- Блок версии 2.5 -->
+                <div class="version-card v25">
+                    <div class="version-header-card">
+                        <span class="version-badge-card">📌 v2.5</span>
+                        <span class="version-date">(предыдущая)</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">🔗</span> Ссылка на GitHub с исходным кодом</li>
+                        <li><span class="feature-icon">🎨</span> Красивые модальные окна подтверждения</li>
+                        <li><span class="feature-icon">🗑</span> Кнопка очистки статистики</li>
+                        <li><span class="feature-icon">📝</span> Своя фраза через кнопку «Другое»</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn danger" id="resetFromModalBtn">🔄 Сбросить всё</button>
+            <button class="modal-btn confirm" id="closeVersionModalBtn">Закрыть</button>
+        </div>
     </div>
 </div>
 
@@ -536,7 +693,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ ==========
+    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ v2.6 (Серый список) ==========
     const themeToggle = document.getElementById('themeToggleBtn');
     function setTheme(theme) { if (theme === 'dark') document.body.classList.add('dark'); else document.body.classList.remove('dark'); localStorage.setItem('birthday_theme', theme); themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙'; }
     if (localStorage.getItem('birthday_theme') === 'dark') setTheme('dark'); else setTheme('light');
@@ -565,124 +722,150 @@
     function saveBirthday(date) { birthdayDate = date; date ? localStorage.setItem('birthday_date', date) : localStorage.removeItem('birthday_date'); updateBirthdayDisplay(); }
     loadBirthday(); function loadBirthday() { let s = localStorage.getItem('birthday_date'); if(s) birthdayDate = s; updateBirthdayDisplay(); }
     
-    let whiteList = [], blackList = [], friendsArray = [], relativesArray = [], selectedPerson = null, blackMoveStats = {}, customPhrases = {};
+    let whiteList = [], blackList = [], grayList = [], friendsArray = [], relativesArray = [], selectedPerson = null;
+    let blackMoveStats = {}, grayMoveStats = {};
+    let customPhrases = {};
+    
     const defaultWhitePhrases = ["С днём рождения! 🎉", "Будь счастлив(а) и здоров(а)! 🌟", "Пусть сбываются мечты ✨", "Обнимаю и поздравляю ❤️", "Ты лучший(ая), помни это! 🥳"];
     const defaultBlackPhrases = ["Никаких поздравлений.", "Пропускаем.", "Тишина в этот день.", "Игнорируем.", "👻 Призрачный пропуск."];
+    const defaultGrayPhrases = ["📵 Временно офлайн, жду связи", "⏳ Не может сейчас написать", "🤝 Поздравлю позже", "💬 На связи позже", "📱 Недоступен в соцсетях"];
     
     function saveAll() {
         localStorage.setItem('birthday_white', JSON.stringify(whiteList));
         localStorage.setItem('birthday_black', JSON.stringify(blackList));
+        localStorage.setItem('birthday_gray', JSON.stringify(grayList));
         localStorage.setItem('birthday_friends', JSON.stringify(friendsArray));
         localStorage.setItem('birthday_relatives', JSON.stringify(relativesArray));
         localStorage.setItem('birthday_black_stats', JSON.stringify(blackMoveStats));
+        localStorage.setItem('birthday_gray_stats', JSON.stringify(grayMoveStats));
         localStorage.setItem('birthday_custom_phrases', JSON.stringify(customPhrases));
     }
     function loadAll() {
         whiteList = (JSON.parse(localStorage.getItem('birthday_white')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
         blackList = (JSON.parse(localStorage.getItem('birthday_black')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
+        grayList = (JSON.parse(localStorage.getItem('birthday_gray')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
         friendsArray = JSON.parse(localStorage.getItem('birthday_friends')||'[]');
         relativesArray = JSON.parse(localStorage.getItem('birthday_relatives')||'[]');
         blackMoveStats = JSON.parse(localStorage.getItem('birthday_black_stats')||'{}');
+        grayMoveStats = JSON.parse(localStorage.getItem('birthday_gray_stats')||'{}');
         customPhrases = JSON.parse(localStorage.getItem('birthday_custom_phrases')||'{}');
         friendsArray = [...new Map(friendsArray.map(n=>[n.toLowerCase(), n])).values()];
         relativesArray = [...new Map(relativesArray.map(n=>[n.toLowerCase(), n])).values()];
         updateStats();
     }
-    function updateStats() { let e=Object.entries(blackMoveStats).sort((a,b)=>b[1]-a[1]); let c=document.getElementById('statsList'); if(!e.length) c.innerHTML='<div class="stats-item">Нет данных</div>'; else c.innerHTML=e.map(([n,cnt])=>`<div class="stats-item"><span>${escapeHtml(n)}</span><span>🚫 ${cnt} раз</span></div>`).join(''); }
-    function clearStats() { blackMoveStats = {}; saveAll(); updateStats(); showToast('📊 Статистика очищена'); }
-    function incrementBlackStat(name) { blackMoveStats[name] = (blackMoveStats[name]||0)+1; saveAll(); updateStats(); }
+    function updateStats() { 
+        let allStats = [];
+        Object.entries(blackMoveStats).forEach(([name, cnt]) => allStats.push({name, type: '🖤', cnt}));
+        Object.entries(grayMoveStats).forEach(([name, cnt]) => allStats.push({name, type: '📱', cnt}));
+        allStats.sort((a,b)=>b.cnt - a.cnt);
+        let container = document.getElementById('statsList'); 
+        if(!allStats.length) container.innerHTML='<div class="stats-item">Нет данных</div>'; 
+        else container.innerHTML=allStats.map(s=>`<div class="stats-item"><span>${s.type} ${escapeHtml(s.name)}</span><span>🚫 ${s.cnt} раз</span></div>`).join(''); 
+    }
+    function clearStats() { blackMoveStats = {}; grayMoveStats = {}; saveAll(); updateStats(); showToast('📊 Статистика очищена'); }
+    function incrementStat(listType, name) { 
+        if(listType === 'black') blackMoveStats[name] = (blackMoveStats[name]||0)+1;
+        else if(listType === 'gray') grayMoveStats[name] = (grayMoveStats[name]||0)+1;
+        saveAll(); updateStats(); 
+    }
     function formatTimestamp(iso) { if(!iso) return '⏱️ не указано'; let d=new Date(iso); return d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-    function getPersonPhrase(name, listType) { let c=customPhrases[name]; if(c) return c.phrase; if(listType==='white') return defaultWhitePhrases[Math.floor(Math.random()*defaultWhitePhrases.length)]; return defaultBlackPhrases[Math.floor(Math.random()*defaultBlackPhrases.length)]; }
-    function deletePhrase(name) { delete customPhrases[name]; saveAll(); renderWhiteBlack(); showToast(`🗑 Фраза для "${name}" удалена`); if(selectedPerson && selectedPerson.name===name) updateSelectedPersonPhraseDisplay(); }
+    function getPersonPhrase(name, listType) { 
+        let c=customPhrases[name]; 
+        if(c) return c.phrase; 
+        if(listType==='white') return defaultWhitePhrases[Math.floor(Math.random()*defaultWhitePhrases.length)];
+        if(listType==='gray') return defaultGrayPhrases[Math.floor(Math.random()*defaultGrayPhrases.length)];
+        return defaultBlackPhrases[Math.floor(Math.random()*defaultBlackPhrases.length)]; 
+    }
+    function deletePhrase(name) { delete customPhrases[name]; saveAll(); renderAllLists(); showToast(`🗑 Фраза для "${name}" удалена`); if(selectedPerson && selectedPerson.name===name) updateSelectedPersonPhraseDisplay(); }
     
     async function resetAllData() {
-        const ok = await askYesNo('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные:\n• Белый и чёрный списки\n• Друзей и родственников\n• Все фразы\n• Статистику\n• Дату рождения\n\nПродолжить?');
+        const ok = await askYesNo('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные:\n• Белый, серый и чёрный списки\n• Друзей и родственников\n• Все фразы\n• Статистику\n• Дату рождения\n\nПродолжить?');
         if (ok) {
             localStorage.clear();
             location.reload();
         }
     }
-    document.getElementById('resetAllBtn').onclick = resetAllData;
-    document.getElementById('clearStatsBtn').onclick = async () => { if(await askYesNo('Очистить статистику попаданий в чёрный список?')) clearStats(); };
     
-    function renderWhiteBlack() {
+    function renderAllLists() {
+        renderWhiteBlackGray();
+        renderGroups();
+    }
+    
+    function renderWhiteBlackGray() {
         let wc = document.getElementById('whiteList'); wc.innerHTML = '';
         if(whiteList.length===0) wc.innerHTML = '<li class="empty-message">✨ Пусто</li>';
-        whiteList.forEach((item, idx) => {
-            let phrase = customPhrases[item.name] ? customPhrases[item.name].phrase : null;
-            let li = document.createElement('li');
-            li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person" data-list="white" data-idx="${idx}">✕</button></div>
-                <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-list="white" data-idx="${idx}">✎ Время</button><button class="edit-time-btn phrase-action-btn">🎁 Фраза</button></div>`;
-            if(phrase) {
-                li.innerHTML += `<div class="person-phrase-display"><span class="person-phrase-text">💬 «${escapeHtml(phrase)}»</span><button class="delete-phrase-btn" data-name="${escapeHtml(item.name)}">✖</button></div>`;
-            }
-            li.querySelector('.remove-person').onclick = () => removeFromList('white', idx);
-            li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor('white', idx, item.name, item.timestamp); };
-            li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToast(`🎤 ${item.name}: «${phrase || getPersonPhrase(item.name,'white')}»`); };
-            let delBtn = li.querySelector('.delete-phrase-btn');
-            if(delBtn) delBtn.onclick = (e) => { e.stopPropagation(); deletePhrase(item.name); };
-            li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: 'white' }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name}`); });
-            wc.appendChild(li);
-        });
+        whiteList.forEach((item, idx) => renderListItem(wc, item, idx, 'white'));
         document.getElementById('whiteCount').innerText = whiteList.length;
+        
+        let gc = document.getElementById('grayList'); gc.innerHTML = '';
+        if(grayList.length===0) gc.innerHTML = '<li class="empty-message">📱 Пусто</li>';
+        grayList.forEach((item, idx) => renderListItem(gc, item, idx, 'gray'));
+        document.getElementById('grayCount').innerText = grayList.length;
         
         let bc = document.getElementById('blackList'); bc.innerHTML = '';
         if(blackList.length===0) bc.innerHTML = '<li class="empty-message">🚫 Пусто</li>';
-        blackList.forEach((item, idx) => {
-            let phrase = customPhrases[item.name] ? customPhrases[item.name].phrase : null;
-            let li = document.createElement('li');
-            li.innerHTML = `<div class="person-row"><span class="person-name">${escapeHtml(item.name)}</span><button class="remove-person" data-list="black" data-idx="${idx}">✕</button></div>
-                <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-list="black" data-idx="${idx}">✎ Время</button><button class="edit-time-btn phrase-action-btn">💔 Фраза</button></div>`;
-            if(phrase) {
-                li.innerHTML += `<div class="person-phrase-display"><span class="person-phrase-text">💬 «${escapeHtml(phrase)}»</span><button class="delete-phrase-btn" data-name="${escapeHtml(item.name)}">✖</button></div>`;
-            }
-            li.querySelector('.remove-person').onclick = () => removeFromList('black', idx);
-            li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor('black', idx, item.name, item.timestamp); };
-            li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToast(`🎤 ${item.name}: «${phrase || getPersonPhrase(item.name,'black')}»`); };
-            let delBtn = li.querySelector('.delete-phrase-btn');
-            if(delBtn) delBtn.onclick = (e) => { e.stopPropagation(); deletePhrase(item.name); };
-            li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: 'black' }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name}`); });
-            bc.appendChild(li);
-        });
+        blackList.forEach((item, idx) => renderListItem(bc, item, idx, 'black'));
         document.getElementById('blackCount').innerText = blackList.length;
+    }
+    
+    function renderListItem(container, item, idx, listType) {
+        let phrase = customPhrases[item.name] ? customPhrases[item.name].phrase : null;
+        let li = document.createElement('li');
+        let icon = listType === 'white' ? '🤍' : (listType === 'gray' ? '📱' : '🖤');
+        li.innerHTML = `<div class="person-row"><span class="person-name">${icon} ${escapeHtml(item.name)}</span><button class="remove-person" data-list="${listType}" data-idx="${idx}">✕</button></div>
+            <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-list="${listType}" data-idx="${idx}">✎ Время</button><button class="edit-time-btn phrase-action-btn">🎁 Фраза</button></div>`;
+        if(phrase) {
+            li.innerHTML += `<div class="person-phrase-display"><span class="person-phrase-text">💬 «${escapeHtml(phrase)}»</span><button class="delete-phrase-btn" data-name="${escapeHtml(item.name)}">✖</button></div>`;
+        }
+        li.querySelector('.remove-person').onclick = () => removeFromList(listType, idx);
+        li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor(listType, idx, item.name, item.timestamp); };
+        li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToast(`🎤 ${item.name}: «${phrase || getPersonPhrase(item.name, listType)}»`); };
+        let delBtn = li.querySelector('.delete-phrase-btn');
+        if(delBtn) delBtn.onclick = (e) => { e.stopPropagation(); deletePhrase(item.name); };
+        li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: listType }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name}`); });
+        container.appendChild(li);
     }
     
     function showPhrasesPanelForSelected() {
         let panel = document.getElementById('phrasesPanel');
-        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { panel.classList.remove('visible'); return; }
-        let listType = whiteList.some(p=>p.name===selectedPerson.name) ? 'white' : 'black';
+        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { panel.classList.remove('visible'); return; }
+        let listType = selectedPerson.listType;
         panel.classList.add('visible');
-        document.getElementById('phrasesPanelTitle').innerHTML = listType === 'white' ? '🎁 Фразы для поздравления (белый список)' : '💔 Фразы для чёрного списка';
+        let title = '';
+        let phrases = [];
+        if(listType === 'white') { title = '🎁 Фразы для поздравления (белый список)'; phrases = defaultWhitePhrases; }
+        else if(listType === 'gray') { title = '📱 Фразы для офлайн/ожидания (серый список)'; phrases = defaultGrayPhrases; }
+        else { title = '💔 Фразы для чёрного списка'; phrases = defaultBlackPhrases; }
+        document.getElementById('phrasesPanelTitle').innerHTML = title;
         let grid = document.getElementById('phrasesGrid');
-        let phrases = listType === 'white' ? defaultWhitePhrases : defaultBlackPhrases;
         grid.innerHTML = phrases.map(ph => `<button class="phrase-btn" data-phrase="${escapeHtml(ph)}">${escapeHtml(ph)}</button>`).join('');
         document.querySelectorAll('#phrasesGrid .phrase-btn').forEach(btn => {
-            btn.onclick = () => { customPhrases[selectedPerson.name] = { phrase: btn.dataset.phrase, listType: listType }; saveAll(); renderWhiteBlack(); updateSelectedPersonPhraseDisplay(); showToast(`✅ Фраза сохранена`); document.getElementById('customPhraseRow').style.display = 'none'; };
+            btn.onclick = () => { customPhrases[selectedPerson.name] = { phrase: btn.dataset.phrase, listType: listType }; saveAll(); renderAllLists(); updateSelectedPersonPhraseDisplay(); showToast(`✅ Фраза сохранена`); document.getElementById('customPhraseRow').style.display = 'none'; };
         });
         updateSelectedPersonPhraseDisplay();
     }
     
     function updateSelectedPersonPhraseDisplay() {
         let div = document.getElementById('selectedPersonPhraseDisplay');
-        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { div.innerHTML = '💬 Выберите человека из списка'; return; }
+        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { div.innerHTML = '💬 Выберите человека из списка'; return; }
         let phraseData = customPhrases[selectedPerson.name];
         if(phraseData) div.innerHTML = `💬 Текущая фраза: «${escapeHtml(phraseData.phrase)}»`;
         else div.innerHTML = `💬 Нет фразы. Выберите готовую или нажмите «Другое».`;
     }
     
     document.getElementById('otherPhraseBtn').onclick = () => {
-        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { showToast('❌ Выберите человека из списка'); return; }
+        if(!selectedPerson || (!whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name))) { showToast('❌ Выберите человека из списка'); return; }
         let row = document.getElementById('customPhraseRow');
         row.style.display = row.style.display === 'none' ? 'flex' : 'none';
     };
     document.getElementById('applyCustomPhraseBtn').onclick = () => {
         if(!selectedPerson) { showToast('❌ Выберите человека'); return; }
-        let listType = whiteList.some(p=>p.name===selectedPerson.name) ? 'white' : 'black';
+        let listType = selectedPerson.listType;
         if(!listType) { showToast('❌ Выберите человека из списка'); return; }
         let text = document.getElementById('customPhraseInput').value.trim();
         if(!text) { showToast('Введите фразу'); return; }
         customPhrases[selectedPerson.name] = { phrase: text, listType: listType };
-        saveAll(); renderWhiteBlack(); updateSelectedPersonPhraseDisplay(); showToast(`✨ Своя фраза добавлена`);
+        saveAll(); renderAllLists(); updateSelectedPersonPhraseDisplay(); showToast(`✨ Своя фраза добавлена`);
         document.getElementById('customPhraseInput').value = '';
         document.getElementById('customPhraseRow').style.display = 'none';
     };
@@ -696,7 +879,7 @@
     }
     function createPersonChip(name, group) {
         let chip = document.createElement('div'); chip.className = 'person-chip';
-        if(selectedPerson && selectedPerson.name === name && !whiteList.some(w=>w.name===name) && !blackList.some(b=>b.name===name)) chip.classList.add('selected');
+        if(selectedPerson && selectedPerson.name === name && !whiteList.some(w=>w.name===name) && !grayList.some(g=>g.name===name) && !blackList.some(b=>b.name===name)) chip.classList.add('selected');
         chip.innerHTML = `${escapeHtml(name)}<button class="remove-person-chip" data-name="${escapeHtml(name)}" data-group="${group}">✕</button>`;
         chip.addEventListener('click', (e) => { if(e.target.classList.contains('remove-person-chip')) return; selectedPerson = { name: name, listType: null }; renderGroups(); document.getElementById('phrasesPanel').classList.remove('visible'); showToast(`✅ Выбран: ${name}`); });
         chip.querySelector('.remove-person-chip').onclick = (e) => { e.stopPropagation(); removePersonFromGroup(name, group); };
@@ -707,37 +890,84 @@
         else relativesArray = relativesArray.filter(n => n !== name);
         if(selectedPerson && selectedPerson.name === name && !selectedPerson.listType) selectedPerson = null;
         whiteList = whiteList.filter(p => p.name !== name);
+        grayList = grayList.filter(p => p.name !== name);
         blackList = blackList.filter(p => p.name !== name);
         delete customPhrases[name];
-        saveAll(); renderGroups(); renderWhiteBlack(); showToast(`🗑 ${name} удалён`);
+        saveAll(); renderGroups(); renderAllLists(); showToast(`🗑 ${name} удалён`);
         if(selectedPerson === null) document.getElementById('phrasesPanel').classList.remove('visible');
     }
     function addToGroup(raw, group) { let n = normalizeAndValidateName(raw); if(!n) return false; let t = group === 'friends' ? friendsArray : relativesArray; if(t.some(x=>x.toLowerCase()===n.toLowerCase())){ showInfo(`"${n}" уже есть`); return false; } t.push(n); saveAll(); renderGroups(); showToast(`➕ ${n} добавлен`); return true; }
     function updateSelectedInfo() { let d = document.getElementById('selectedInfoGlobal'); if(selectedPerson) d.innerHTML = `✅ Выбран: <strong>${escapeHtml(selectedPerson.name)}</strong>`; else d.innerHTML = `✨ Никто не выбран`; }
     
-    async function moveSelectedToWhite() {
+    async function moveSelectedToList(targetList) {
         if(!selectedPerson){ await showWarning('Выберите человека'); return; }
         let name = selectedPerson.name;
-        if(whiteList.some(p=>p.name.toLowerCase()===name.toLowerCase())){ await showInfo(`"${name}" уже в белом`); return; }
-        let bi = blackList.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
-        if(bi !== -1 && await askYesNo(`«${name}» в ЧЁРНОМ. Перенести в БЕЛЫЙ?`)){ let item=blackList[bi]; blackList.splice(bi,1); whiteList.push({name:item.name,timestamp:item.timestamp}); saveAll(); renderWhiteBlack(); showToast(`✨ ${name} в белом`); selectedPerson={name,listType:'white'}; showPhrasesPanelForSelected(); }
-        else if(bi === -1){ whiteList.push({name,timestamp:null}); saveAll(); renderWhiteBlack(); showToast(`🤍 ${name} добавлен в белый`); selectedPerson={name,listType:'white'}; showPhrasesPanelForSelected(); }
-        renderGroups();
-    }
-    async function moveSelectedToBlack() {
-        if(!selectedPerson){ await showWarning('Выберите человека'); return; }
-        let name = selectedPerson.name;
-        if(blackList.some(p=>p.name.toLowerCase()===name.toLowerCase())){ await showInfo(`"${name}" уже в чёрном`); return; }
-        let wi = whiteList.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
-        if(wi !== -1 && await askYesNo(`«${name}» в БЕЛОМ. Перенести в ЧЁРНЫЙ?`)){ let item=whiteList[wi]; whiteList.splice(wi,1); blackList.push({name:item.name,timestamp:item.timestamp}); incrementBlackStat(name); saveAll(); renderWhiteBlack(); showToast(`🖤 ${name} в чёрном`); selectedPerson={name,listType:'black'}; showPhrasesPanelForSelected(); }
-        else if(wi === -1){ blackList.push({name,timestamp:null}); incrementBlackStat(name); saveAll(); renderWhiteBlack(); showToast(`🚫 ${name} добавлен в чёрный`); selectedPerson={name,listType:'black'}; showPhrasesPanelForSelected(); }
+        let sourceList = null;
+        if(whiteList.some(p=>p.name===name)) sourceList = 'white';
+        else if(grayList.some(p=>p.name===name)) sourceList = 'gray';
+        else if(blackList.some(p=>p.name===name)) sourceList = 'black';
+        
+        if(sourceList === targetList) { await showInfo(`"${name}" уже в этом списке`); return; }
+        
+        let confirmMsg = `«${name}» ${sourceList ? `в ${sourceList === 'white' ? 'белом' : (sourceList === 'gray' ? 'сером' : 'чёрном')} списке.` : 'не в списках'} Перенести в ${targetList === 'white' ? 'белый' : (targetList === 'gray' ? 'серый (офлайн)' : 'чёрный')}?`;
+        if(sourceList && !(await askYesNo(confirmMsg))) return;
+        
+        whiteList = whiteList.filter(p => p.name !== name);
+        grayList = grayList.filter(p => p.name !== name);
+        blackList = blackList.filter(p => p.name !== name);
+        
+        let newItem = { name: name, timestamp: null };
+        if(targetList === 'white') whiteList.push(newItem);
+        else if(targetList === 'gray') { grayList.push(newItem); incrementStat('gray', name); }
+        else if(targetList === 'black') { blackList.push(newItem); incrementStat('black', name); }
+        
+        saveAll(); renderAllLists();
+        showToast(`✅ ${name} перенесён в ${targetList === 'white' ? 'белый' : (targetList === 'gray' ? 'серый' : 'чёрный')} список`);
+        selectedPerson = { name, listType: targetList };
+        showPhrasesPanelForSelected();
         renderGroups();
     }
     
-    function removeFromList(listType, idx) { let r = listType==='white' ? whiteList.splice(idx,1)[0] : blackList.splice(idx,1)[0]; delete customPhrases[r.name]; saveAll(); renderWhiteBlack(); showToast(`❌ ${r.name} удалён`); if(selectedPerson && selectedPerson.name===r.name) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } renderGroups(); }
-    function openTimeEditor(listType, idx, name, ts) { let m=document.getElementById('timeModal'), p=document.getElementById('datetimePicker'); document.getElementById('timeModalMessage').innerHTML=`⏰ Укажите дату и время для<br><strong>${escapeHtml(name)}</strong>`; p.value=ts||''; let close=()=>m.classList.remove('active'); document.getElementById('timeModalSave').onclick=()=>{ let v=p.value; if(listType==='white') whiteList[idx].timestamp=v||null; else blackList[idx].timestamp=v||null; saveAll(); renderWhiteBlack(); showToast(`Время для "${name}" сохранено`); close(); }; document.getElementById('timeModalCancel').onclick=close; document.getElementById('timeModalClear').onclick=()=>{ if(listType==='white') whiteList[idx].timestamp=null; else blackList[idx].timestamp=null; saveAll(); renderWhiteBlack(); showToast(`Время очищено`); close(); }; m.classList.add('active'); }
-    async function clearWhite(){ if(whiteList.length && await askYesNo('Очистить белый список?')){ whiteList=[]; saveAll(); renderWhiteBlack(); showToast('Белый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
-    async function clearBlack(){ if(blackList.length && await askYesNo('Очистить чёрный список?')){ blackList=[]; saveAll(); renderWhiteBlack(); showToast('Чёрный список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
+    function removeFromList(listType, idx) { 
+        let removed = null;
+        if(listType === 'white') removed = whiteList.splice(idx,1)[0];
+        else if(listType === 'gray') removed = grayList.splice(idx,1)[0];
+        else removed = blackList.splice(idx,1)[0];
+        delete customPhrases[removed.name]; 
+        saveAll(); renderAllLists(); showToast(`❌ ${removed.name} удалён`); 
+        if(selectedPerson && selectedPerson.name===removed.name) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } 
+        renderGroups(); 
+    }
+    function openTimeEditor(listType, idx, name, ts) { 
+        let m=document.getElementById('timeModal'), p=document.getElementById('datetimePicker'); 
+        document.getElementById('timeModalMessage').innerHTML=`⏰ Укажите дату и время для<br><strong>${escapeHtml(name)}</strong>`; 
+        p.value=ts||''; 
+        let close=()=>m.classList.remove('active'); 
+        document.getElementById('timeModalSave').onclick=()=>{ let v=p.value; 
+            if(listType==='white') whiteList[idx].timestamp=v||null;
+            else if(listType==='gray') grayList[idx].timestamp=v||null;
+            else blackList[idx].timestamp=v||null;
+            saveAll(); renderAllLists(); showToast(`Время для "${name}" сохранено`); close(); }; 
+        document.getElementById('timeModalCancel').onclick=close; 
+        document.getElementById('timeModalClear').onclick=()=>{ 
+            if(listType==='white') whiteList[idx].timestamp=null;
+            else if(listType==='gray') grayList[idx].timestamp=null;
+            else blackList[idx].timestamp=null;
+            saveAll(); renderAllLists(); showToast(`Время очищено`); close(); }; 
+        m.classList.add('active'); 
+    }
+    async function clearWhite(){ if(whiteList.length && await askYesNo('Очистить белый список?')){ whiteList=[]; saveAll(); renderAllLists(); showToast('Белый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
+    async function clearGray(){ if(grayList.length && await askYesNo('Очистить серый список (офлайн)?')){ grayList=[]; saveAll(); renderAllLists(); showToast('Серый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
+    async function clearBlack(){ if(blackList.length && await askYesNo('Очистить чёрный список?')){ blackList=[]; saveAll(); renderAllLists(); showToast('Чёрный список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
+    
+    // Модальное окно для версий
+    const versionModal = document.getElementById('versionModal');
+    document.getElementById('versionButton').onclick = () => versionModal.classList.add('active');
+    document.getElementById('closeVersionModalBtn').onclick = () => versionModal.classList.remove('active');
+    document.getElementById('resetFromModalBtn').onclick = async () => {
+        versionModal.classList.remove('active');
+        await resetAllData();
+    };
     
     let modalResolve=null;
     const modal=document.getElementById('customModal'), modalIcon=document.getElementById('modalIcon'), modalMessage=document.getElementById('modalMessage'), modalButtons=document.getElementById('modalButtons');
@@ -748,13 +978,16 @@
     function showToast(msg){ let t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
     function escapeHtml(str){ return String(str).replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
     
-    loadAll(); renderGroups(); renderWhiteBlack();
+    loadAll(); renderGroups(); renderAllLists();
     document.getElementById('addFriendBtn').onclick = () => { addToGroup(document.getElementById('newFriendName').value, 'friends'); document.getElementById('newFriendName').value = ''; };
     document.getElementById('addRelativeBtn').onclick = () => { addToGroup(document.getElementById('newRelativeName').value, 'relatives'); document.getElementById('newRelativeName').value = ''; };
-    document.getElementById('moveSelectedToWhite').onclick = moveSelectedToWhite;
-    document.getElementById('moveSelectedToBlack').onclick = moveSelectedToBlack;
+    document.getElementById('moveSelectedToWhite').onclick = () => moveSelectedToList('white');
+    document.getElementById('moveSelectedToGray').onclick = () => moveSelectedToList('gray');
+    document.getElementById('moveSelectedToBlack').onclick = () => moveSelectedToList('black');
     document.getElementById('clearWhiteBtn').onclick = clearWhite;
+    document.getElementById('clearGrayBtn').onclick = clearGray;
     document.getElementById('clearBlackBtn').onclick = clearBlack;
+    document.getElementById('clearStatsBtn').onclick = async () => { if(await askYesNo('Очистить всю статистику?')) clearStats(); };
     document.getElementById('newFriendName').addEventListener('keypress', e => { if(e.key === 'Enter') document.getElementById('addFriendBtn').click(); });
     document.getElementById('newRelativeName').addEventListener('keypress', e => { if(e.key === 'Enter') document.getElementById('addRelativeBtn').click(); });
 </script>
