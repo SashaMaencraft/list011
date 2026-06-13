@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Именинный реестр — друзья и родственники (v2.6)</title>
+    <title>Именинный реестр — друзья и родственники (v2.9.2)</title>
     <style>
         * {
             margin: 0;
@@ -46,8 +46,16 @@
             --version-btn-bg: #b87c4f;
             --version-card-v25: #fef5e8;
             --version-card-v26: #e8f0fe;
+            --version-card-v27: #e6f0ea;
+            --version-card-v28: #f5e6f0;
+            --version-card-v29: #e8f0e6;
             --version-border-v25: #e8d5b5;
             --version-border-v26: #c5d5e8;
+            --version-border-v27: #c5e0d5;
+            --version-border-v28: #e8c5d5;
+            --version-border-v29: #d5e8c5;
+            --congrats-bg: #f0e6d2;
+            --congrats-record-bg: #e8f0e8;
         }
 
         body.dark {
@@ -84,8 +92,16 @@
             --version-btn-bg: #e2a16a;
             --version-card-v25: #3d3528;
             --version-card-v26: #283545;
+            --version-card-v27: #283d35;
+            --version-card-v28: #3d2835;
+            --version-card-v29: #353d28;
             --version-border-v25: #5a4a30;
             --version-border-v26: #3a5570;
+            --version-border-v27: #3a7055;
+            --version-border-v28: #703a55;
+            --version-border-v29: #55703a;
+            --congrats-bg: #2e2a24;
+            --congrats-record-bg: #2a3a2a;
         }
 
         body {
@@ -247,7 +263,6 @@
         .modal-btn.danger { background: #c0392b; color: white; }
         .modal-btn.danger:hover { background: #e74c3c; }
 
-        /* Стили для карточек версий */
         .version-cards {
             display: flex;
             flex-direction: column;
@@ -276,6 +291,27 @@
             border-top: 1px solid var(--version-border-v26);
             border-right: 1px solid var(--version-border-v26);
             border-bottom: 1px solid var(--version-border-v26);
+        }
+        .version-card.v27 {
+            background: var(--version-card-v27);
+            border-left-color: #6fbf9e;
+            border-top: 1px solid var(--version-border-v27);
+            border-right: 1px solid var(--version-border-v27);
+            border-bottom: 1px solid var(--version-border-v27);
+        }
+        .version-card.v28 {
+            background: var(--version-card-v28);
+            border-left-color: #bf6f9e;
+            border-top: 1px solid var(--version-border-v28);
+            border-right: 1px solid var(--version-border-v28);
+            border-bottom: 1px solid var(--version-border-v28);
+        }
+        .version-card.v29 {
+            background: var(--version-card-v29);
+            border-left-color: #9ebf6f;
+            border-top: 1px solid var(--version-border-v29);
+            border-right: 1px solid var(--version-border-v29);
+            border-bottom: 1px solid var(--version-border-v29);
         }
         .version-header-card {
             display: flex;
@@ -401,6 +437,20 @@
             padding-left: 0.6rem;
             font-weight: 600;
         }
+        .help-icon {
+            margin-left: auto;
+            cursor: pointer;
+            background: var(--accent-soft);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
         .people-grid {
             display: flex;
             flex-wrap: wrap;
@@ -465,6 +515,8 @@
         .person-name { font-size: 0.9rem; font-weight: 500; }
         .timestamp-info { font-size: 0.7rem; color: var(--text-soft); margin-top: 0.3rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
         .edit-time-btn { background: none; border: 1px solid var(--input-border); border-radius: 1rem; padding: 0.2rem 0.5rem; font-size: 0.65rem; cursor: pointer; color: var(--text-soft); }
+        .congrats-btn-inline { background: var(--accent); border: none; border-radius: 1rem; padding: 0.2rem 0.6rem; font-size: 0.65rem; cursor: pointer; color: white; font-weight: bold; }
+        body.dark .congrats-btn-inline { background: #e2a16a; color: #1e1b18; }
         .remove-person { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 1rem; }
         .empty-message { padding: 1rem; text-align: center; color: var(--text-soft); font-size: 0.75rem; }
         
@@ -484,6 +536,18 @@
         .person-phrase-text { color: var(--phrase-text); font-style: italic; word-break: break-word; flex: 1; }
         .delete-phrase-btn { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 0.7rem; padding: 0 0.3rem; border-radius: 1rem; }
         .delete-phrase-btn:hover { color: #e06c6c; }
+        
+        .congrats-record {
+            font-size: 0.65rem;
+            margin-top: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            background: var(--congrats-record-bg);
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-soft);
+        }
         
         .stats-card {
             background: var(--card-bg);
@@ -539,6 +603,33 @@
         .custom-phrase-row input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 2rem; padding: 0.4rem 0.8rem; font-size: 0.7rem; color: var(--text-main); }
         .selected-person-phrase { font-size: 0.75rem; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--phrase-border); color: var(--text-soft); text-align: center; }
         
+        .social-grid {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .social-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 3rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+        .social-btn.selected-social {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .social-btn:hover { transform: scale(1.05); background: var(--accent); color: white; }
+
         @media (max-width: 780px) {
             .dashboard { flex-direction: column; }
             .sidebar-col { order: 2; }
@@ -580,7 +671,7 @@
 
             <div class="list-card">
                 <div class="list-header">
-                    <div class="list-title">🤍 Белый список <span class="count" id="whiteCount">0</span></div>
+                    <div class="list-title">🤍 Белый список <span class="count" id="whiteCount">0</span> <span class="help-icon" data-help="white">❓</span></div>
                     <button class="clear-list" id="clearWhiteBtn">очистить</button>
                 </div>
                 <ul class="people-list" id="whiteList"></ul>
@@ -588,7 +679,7 @@
 
             <div class="list-card">
                 <div class="list-header">
-                    <div class="list-title">📱 Серый список / Офлайн <span class="count" id="grayCount">0</span></div>
+                    <div class="list-title">📱 Серый список / Офлайн <span class="count" id="grayCount">0</span> <span class="help-icon" data-help="gray">❓</span></div>
                     <button class="clear-list" id="clearGrayBtn">очистить</button>
                 </div>
                 <ul class="people-list" id="grayList"></ul>
@@ -596,7 +687,7 @@
 
             <div class="list-card">
                 <div class="list-header">
-                    <div class="list-title">🖤 Чёрный список <span class="count" id="blackCount">0</span></div>
+                    <div class="list-title">🖤 Чёрный список <span class="count" id="blackCount">0</span> <span class="help-icon" data-help="black">❓</span></div>
                     <button class="clear-list" id="clearBlackBtn">очистить</button>
                 </div>
                 <ul class="people-list" id="blackList"></ul>
@@ -642,40 +733,44 @@
     </div>
 </div>
 
-<!-- Модальное окно для версий с красивыми карточками -->
+<!-- Модальное окно для версий -->
 <div id="versionModal" class="custom-modal">
     <div class="modal-content">
         <div class="modal-icon">📋</div>
         <div class="modal-message">
             <strong style="font-size: 1.2rem; display: block; text-align: center; margin-bottom: 1rem;">📜 История обновлений</strong>
             <div class="version-cards">
-                <!-- Блок версии 2.6 -->
+                <div class="version-card v29">
+                    <div class="version-header-card">
+                        <span class="version-badge-card">🆕 v2.9.2 — текущая</span>
+                        <span class="version-date">(июль 2026)</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">✅</span> Исправлен баг с повторным выбором соцсети</li>
+                        <li><span class="feature-icon">💾</span> Добавлена кнопка «Сохранить» в окно выбора</li>
+                        <li><span class="feature-icon">🔄</span> Можно менять соцсеть без обновления страницы</li>
+                    </ul>
+                </div>
+                <div class="separator">✦ ✦ ✦</div>
+                <div class="version-card v28">
+                    <div class="version-header-card">
+                        <span class="version-badge-card">📌 v2.8</span>
+                        <span class="version-date">(июль 2026)</span>
+                    </div>
+                    <ul class="feature-list">
+                        <li><span class="feature-icon">🎉</span> Кнопка «Меня поздравили» в боковой панели</li>
+                        <li><span class="feature-icon">❓</span> Подсказки для каждого списка</li>
+                    </ul>
+                </div>
+                <div class="separator">✦ ✦ ✦</div>
                 <div class="version-card v26">
                     <div class="version-header-card">
-                        <span class="version-badge-card">🆕 v2.6 — текущая</span>
+                        <span class="version-badge-card">📌 v2.6</span>
                         <span class="version-date">(июнь 2026)</span>
                     </div>
                     <ul class="feature-list">
-                        <li><span class="feature-icon">📱</span> Добавлен «Серый список» (временно не может написать / офлайн)</li>
+                        <li><span class="feature-icon">📱</span> Серый список (офлайн)</li>
                         <li><span class="feature-icon">💬</span> Свои фразы для серого списка</li>
-                        <li><span class="feature-icon">📊</span> Статистика теперь включает и серый список</li>
-                        <li><span class="feature-icon">🎨</span> Красивые карточки версий в модальном окне</li>
-                    </ul>
-                </div>
-                
-                <div class="separator">✦ ✦ ✦</div>
-                
-                <!-- Блок версии 2.5 -->
-                <div class="version-card v25">
-                    <div class="version-header-card">
-                        <span class="version-badge-card">📌 v2.5</span>
-                        <span class="version-date">(предыдущая)</span>
-                    </div>
-                    <ul class="feature-list">
-                        <li><span class="feature-icon">🔗</span> Ссылка на GitHub с исходным кодом</li>
-                        <li><span class="feature-icon">🎨</span> Красивые модальные окна подтверждения</li>
-                        <li><span class="feature-icon">🗑</span> Кнопка очистки статистики</li>
-                        <li><span class="feature-icon">📝</span> Своя фраза через кнопку «Другое»</li>
                     </ul>
                 </div>
             </div>
@@ -687,13 +782,32 @@
     </div>
 </div>
 
+<!-- Модальное окно для выбора соцсети (исправленное) -->
+<div id="socialModal" class="custom-modal">
+    <div class="modal-content">
+        <div class="modal-icon">🎉</div>
+        <div class="modal-message" id="socialModalMessage">Кто вас поздравил?</div>
+        <div class="social-grid" id="socialGrid">
+            <button class="social-btn" data-social="Telegram">📱 Telegram</button>
+            <button class="social-btn" data-social="WhatsApp">💬 WhatsApp</button>
+            <button class="social-btn" data-social="VK">📘 VK</button>
+            <button class="social-btn" data-social="Личная встреча">🤝 Лично</button>
+            <button class="social-btn" data-social="Другое">✨ Другое</button>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" id="cancelSocialBtn">Отмена</button>
+            <button class="modal-btn confirm" id="saveSocialBtn">💾 Сохранить</button>
+        </div>
+    </div>
+</div>
+
 <div id="dateModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">🎂</div><div class="modal-message">Введите дату рождения в формате<br><strong>ДД.ММ.ГГГГ</strong></div><input type="text" id="birthdayTextInput" placeholder="ДД.ММ.ГГГГ" style="width:100%; padding:0.6rem; margin:1rem 0; border-radius:2rem; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-main);"><div class="modal-buttons"><button class="modal-btn cancel" id="dateModalCancel">Отмена</button><button class="modal-btn confirm" id="dateModalSave">Сохранить</button></div></div></div>
 <div id="timeModal" class="custom-modal"><div class="modal-content"><div class="modal-icon">⏰</div><div class="modal-message" id="timeModalMessage"></div><input type="datetime-local" id="datetimePicker" style="width:100%; margin:1rem 0; padding:0.5rem; border-radius:2rem; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-main);"><div class="modal-buttons"><button class="modal-btn cancel" id="timeModalCancel">Отмена</button><button class="modal-btn confirm" id="timeModalSave">Сохранить</button><button class="modal-btn" id="timeModalClear">Очистить</button></div></div></div>
 <div id="customModal" class="custom-modal"><div class="modal-content"><div class="modal-icon" id="modalIcon">❓</div><div class="modal-message" id="modalMessage"></div><div class="modal-buttons" id="modalButtons"></div></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
-    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ v2.6 (Серый список) ==========
+    // ========== ПОЛНЫЙ ФУНКЦИОНАЛ v2.9.2 (ИСПРАВЛЕН БАГ С ПОВТОРНЫМ ВЫБОРОМ) ==========
     const themeToggle = document.getElementById('themeToggleBtn');
     function setTheme(theme) { if (theme === 'dark') document.body.classList.add('dark'); else document.body.classList.remove('dark'); localStorage.setItem('birthday_theme', theme); themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙'; }
     if (localStorage.getItem('birthday_theme') === 'dark') setTheme('dark'); else setTheme('light');
@@ -702,6 +816,18 @@
     let legalCollapsed = false;
     document.getElementById('legalHeader').onclick = () => { legalCollapsed = !legalCollapsed; document.getElementById('legalContent').style.display = legalCollapsed ? 'none' : 'block'; document.getElementById('legalToggleIcon').textContent = legalCollapsed ? '▶' : '▼'; };
     
+    document.querySelectorAll('.help-icon').forEach(icon => {
+        icon.onclick = (e) => {
+            e.stopPropagation();
+            const type = icon.dataset.help;
+            let msg = "";
+            if(type === 'white') msg = "🤍 Белый список: сюда добавляются люди, которых вы ОБЯЗАТЕЛЬНО хотите поздравить. Для них вы можете выбрать особые тёплые фразы.";
+            else if(type === 'gray') msg = "📱 Серый список: люди, которые временно не могут ответить (офлайн, заняты) или вы пока не уверены. Фразы будут с намёком на ожидание.";
+            else msg = "🖤 Чёрный список: люди, которых вы принципиально не поздравляете (или они вас). Фразы короткие и холодные.";
+            showInfo(msg);
+        };
+    });
+
     function validateNameOnlyLetters(input) { return /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/.test(input); }
     function normalizeAndValidateName(rawName) {
         let cleaned = rawName.trim().replace(/\s+/g, ' ');
@@ -725,6 +851,7 @@
     let whiteList = [], blackList = [], grayList = [], friendsArray = [], relativesArray = [], selectedPerson = null;
     let blackMoveStats = {}, grayMoveStats = {};
     let customPhrases = {};
+    let congratsRecords = {};
     
     const defaultWhitePhrases = ["С днём рождения! 🎉", "Будь счастлив(а) и здоров(а)! 🌟", "Пусть сбываются мечты ✨", "Обнимаю и поздравляю ❤️", "Ты лучший(ая), помни это! 🥳"];
     const defaultBlackPhrases = ["Никаких поздравлений.", "Пропускаем.", "Тишина в этот день.", "Игнорируем.", "👻 Призрачный пропуск."];
@@ -739,6 +866,7 @@
         localStorage.setItem('birthday_black_stats', JSON.stringify(blackMoveStats));
         localStorage.setItem('birthday_gray_stats', JSON.stringify(grayMoveStats));
         localStorage.setItem('birthday_custom_phrases', JSON.stringify(customPhrases));
+        localStorage.setItem('birthday_congrats', JSON.stringify(congratsRecords));
     }
     function loadAll() {
         whiteList = (JSON.parse(localStorage.getItem('birthday_white')||'[]')).map(i => typeof i === 'string' ? { name: i, timestamp: null } : i);
@@ -749,6 +877,7 @@
         blackMoveStats = JSON.parse(localStorage.getItem('birthday_black_stats')||'{}');
         grayMoveStats = JSON.parse(localStorage.getItem('birthday_gray_stats')||'{}');
         customPhrases = JSON.parse(localStorage.getItem('birthday_custom_phrases')||'{}');
+        congratsRecords = JSON.parse(localStorage.getItem('birthday_congrats')||'{}');
         friendsArray = [...new Map(friendsArray.map(n=>[n.toLowerCase(), n])).values()];
         relativesArray = [...new Map(relativesArray.map(n=>[n.toLowerCase(), n])).values()];
         updateStats();
@@ -808,22 +937,74 @@
         document.getElementById('blackCount').innerText = blackList.length;
     }
     
+    let currentCongratsPerson = null;
+    let selectedSocial = null;
+    
+    function openSocialModal(personName) {
+        currentCongratsPerson = personName;
+        selectedSocial = congratsRecords[personName] || null;
+        document.getElementById('socialModalMessage').innerHTML = `Выберите соцсеть для<br><strong>${escapeHtml(personName)}</strong>`;
+        
+        // Подсветить уже выбранную соцсеть
+        document.querySelectorAll('#socialGrid .social-btn').forEach(btn => {
+            if(selectedSocial && btn.dataset.social === selectedSocial) {
+                btn.classList.add('selected-social');
+            } else {
+                btn.classList.remove('selected-social');
+            }
+        });
+        
+        document.getElementById('socialModal').classList.add('active');
+    }
+    
+    function saveCongrats(personName, social) {
+        if(!social) return;
+        congratsRecords[personName] = social;
+        saveAll();
+        renderAllLists();
+        showToast(`🎉 ${personName} поздравил(а) вас в ${social}!`);
+    }
+    
     function renderListItem(container, item, idx, listType) {
         let phrase = customPhrases[item.name] ? customPhrases[item.name].phrase : null;
+        let congratsSocial = congratsRecords[item.name];
         let li = document.createElement('li');
         let icon = listType === 'white' ? '🤍' : (listType === 'gray' ? '📱' : '🖤');
         li.innerHTML = `<div class="person-row"><span class="person-name">${icon} ${escapeHtml(item.name)}</span><button class="remove-person" data-list="${listType}" data-idx="${idx}">✕</button></div>
-            <div class="timestamp-info"><span>${formatTimestamp(item.timestamp)}</span><button class="edit-time-btn" data-list="${listType}" data-idx="${idx}">✎ Время</button><button class="edit-time-btn phrase-action-btn">🎁 Фраза</button></div>`;
+            <div class="timestamp-info">
+                <span>${formatTimestamp(item.timestamp)}</span>
+                <button class="edit-time-btn" data-list="${listType}" data-idx="${idx}">✎ Время</button>
+                <button class="edit-time-btn phrase-action-btn">🎁 Фраза</button>
+                <button class="congrats-btn-inline" data-name="${escapeHtml(item.name)}">🎉 Меня поздравили</button>
+            </div>`;
+        if(congratsSocial) {
+            li.innerHTML += `<div class="congrats-record">✅ Поздравил(а) через: ${getSocialIcon(congratsSocial)} ${congratsSocial}</div>`;
+        }
         if(phrase) {
             li.innerHTML += `<div class="person-phrase-display"><span class="person-phrase-text">💬 «${escapeHtml(phrase)}»</span><button class="delete-phrase-btn" data-name="${escapeHtml(item.name)}">✖</button></div>`;
         }
         li.querySelector('.remove-person').onclick = () => removeFromList(listType, idx);
         li.querySelector('.edit-time-btn').onclick = (e) => { e.stopPropagation(); openTimeEditor(listType, idx, item.name, item.timestamp); };
         li.querySelector('.phrase-action-btn').onclick = (e) => { e.stopPropagation(); showToast(`🎤 ${item.name}: «${phrase || getPersonPhrase(item.name, listType)}»`); };
+        const congratsBtn = li.querySelector('.congrats-btn-inline');
+        if(congratsBtn) {
+            congratsBtn.onclick = (e) => { e.stopPropagation(); openSocialModal(item.name); };
+        }
         let delBtn = li.querySelector('.delete-phrase-btn');
         if(delBtn) delBtn.onclick = (e) => { e.stopPropagation(); deletePhrase(item.name); };
         li.addEventListener('click', () => { selectedPerson = { name: item.name, listType: listType }; renderGroups(); showPhrasesPanelForSelected(); showToast(`✅ Выбран: ${item.name}`); });
         container.appendChild(li);
+    }
+    
+    function getSocialIcon(social) {
+        const icons = {
+            'Telegram': '📱',
+            'WhatsApp': '💬',
+            'VK': '📘',
+            'Личная встреча': '🤝',
+            'Другое': '✨'
+        };
+        return icons[social] || '🎉';
     }
     
     function showPhrasesPanelForSelected() {
@@ -893,6 +1074,7 @@
         grayList = grayList.filter(p => p.name !== name);
         blackList = blackList.filter(p => p.name !== name);
         delete customPhrases[name];
+        delete congratsRecords[name];
         saveAll(); renderGroups(); renderAllLists(); showToast(`🗑 ${name} удалён`);
         if(selectedPerson === null) document.getElementById('phrasesPanel').classList.remove('visible');
     }
@@ -933,7 +1115,8 @@
         if(listType === 'white') removed = whiteList.splice(idx,1)[0];
         else if(listType === 'gray') removed = grayList.splice(idx,1)[0];
         else removed = blackList.splice(idx,1)[0];
-        delete customPhrases[removed.name]; 
+        delete customPhrases[removed.name];
+        delete congratsRecords[removed.name];
         saveAll(); renderAllLists(); showToast(`❌ ${removed.name} удалён`); 
         if(selectedPerson && selectedPerson.name===removed.name) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } 
         renderGroups(); 
@@ -959,6 +1142,39 @@
     async function clearWhite(){ if(whiteList.length && await askYesNo('Очистить белый список?')){ whiteList=[]; saveAll(); renderAllLists(); showToast('Белый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     async function clearGray(){ if(grayList.length && await askYesNo('Очистить серый список (офлайн)?')){ grayList=[]; saveAll(); renderAllLists(); showToast('Серый список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
     async function clearBlack(){ if(blackList.length && await askYesNo('Очистить чёрный список?')){ blackList=[]; saveAll(); renderAllLists(); showToast('Чёрный список очищен'); renderGroups(); if(selectedPerson && !whiteList.some(p=>p.name===selectedPerson.name) && !grayList.some(p=>p.name===selectedPerson.name) && !blackList.some(p=>p.name===selectedPerson.name)) { selectedPerson=null; document.getElementById('phrasesPanel').classList.remove('visible'); } } }
+    
+    // ИСПРАВЛЕННЫЕ обработчики для модального окна соцсетей
+    const socialModal = document.getElementById('socialModal');
+    let tempSelectedSocial = null;
+    
+    // Выбор соцсети (временно)
+    document.querySelectorAll('#socialGrid .social-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#socialGrid .social-btn').forEach(b => b.classList.remove('selected-social'));
+            btn.classList.add('selected-social');
+            tempSelectedSocial = btn.dataset.social;
+        });
+    });
+    
+    // Кнопка Сохранить
+    document.getElementById('saveSocialBtn').onclick = () => {
+        if(currentCongratsPerson && tempSelectedSocial) {
+            saveCongrats(currentCongratsPerson, tempSelectedSocial);
+        } else if(currentCongratsPerson && !tempSelectedSocial) {
+            showToast('❌ Выберите соцсеть');
+            return;
+        }
+        socialModal.classList.remove('active');
+        currentCongratsPerson = null;
+        tempSelectedSocial = null;
+    };
+    
+    // Кнопка Отмена
+    document.getElementById('cancelSocialBtn').onclick = () => {
+        socialModal.classList.remove('active');
+        currentCongratsPerson = null;
+        tempSelectedSocial = null;
+    };
     
     // Модальное окно для версий
     const versionModal = document.getElementById('versionModal');
